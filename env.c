@@ -1,28 +1,23 @@
-// (((+ add) (- sub))
+#include <stdlib.h>
+#include <string.h>
+#include "lisp.h"
+
+typedef enum procedure Procedure;
+
+enum procedure {
+  PRIMITIVE,
+  COMPOUND
+};
+
+// (((+ 'primitive add) (- sub))
 //  ((cons cons)))
 
 void setup_environment(Element *env)
 {
   // Pseudocode:
-  cons(make_frame([+, add], [-, sub]), env);
+  // cons(make_frame([+, add], [-, sub]), env);
 }
 
-Element make_cons(Element x, Element y) // pointer or direct?
-{
-  Pair *get_next_free_ptr(void);
-
-  Element e;
-
-  Pair *p = get_next_free_ptr();
-
-  p->car = x;
-  p->cdr = y;
-
-  e.type_tag = PAIR;
-  e.contents.pair_ptr = p;
-
-  return e;
-}
 
 Element extend_environment(Element var_val_pairs, Element base_env)
 {

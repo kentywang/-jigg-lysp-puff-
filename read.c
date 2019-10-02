@@ -5,7 +5,6 @@
 
 static char *read_word(int);
 static void read_parens(Element *);
-static int get_number(int);
 static char *create_symbol(int);
 static int getch(void);
 static void ungetch(int);
@@ -58,8 +57,10 @@ char *read_word(int count)
 {
   int c = getch();
 
+  if (c == EOF)
+    return create_symbol(count);
+
   if (
-    c == EOF ||
     isspace(c) ||
     c == '(' ||
     c == ')'
@@ -134,20 +135,10 @@ void read_parens(Element *e)
   return;
 }
 
-int get_number(int size)
-{
-  char s[size];
-
-  buffered_seek(size);
-  fgets(s, size + 1, stdin);
-
-  return atoi(s);
-}
-
 char *create_symbol(int size)
 {
   // Reserve memory size for word.
-  char *s = (char *) malloc(size + 1);
+  char *s = string_alloc(size);
 
   // Rewind stdin pointer to start of word.
   buffered_seek(size);

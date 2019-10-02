@@ -49,7 +49,13 @@ extern void print_element(Element *);
 
 /* memory.c */
 extern Pair *get_next_free_ptr(void);
-extern Pair *set_next_free_ptr(void);
+extern char *string_alloc(int);
+
+/* data.c */
+extern Element make_list(const Pair *);
+extern Element make_cons(const Element, const Element);
+
+/* env.c */
 
 /* util.c */
 extern Boolean is_integer(char *);
