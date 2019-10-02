@@ -23,12 +23,18 @@ struct element {
   enum type {
     PAIR,
     NUMBER,
-    SYMBOL
+    SYMBOL,
+    // The following are never read from input, and are never exposed to
+    // users:
+    PRIMITIVE_PROCEDURE,
+    COMPOUND_PROCEDURE
   } type_tag;
   union value {
     Pair *pair_ptr;
     int number;
     char *symbol;
+    // PRIMITIVE_PROCEDURE uses a Pair pointer like PAIR.
+    Element (*func_ptr)(const Pair *);
     // Need to store string too.
     // And boolean?
   } contents;
@@ -56,6 +62,9 @@ extern Element make_list(const Pair *);
 extern Element make_cons(const Element, const Element);
 
 /* env.c */
+
+/* primitive.c */
+extern Element add(const Pair *);
 
 /* util.c */
 extern Boolean is_integer(char *);

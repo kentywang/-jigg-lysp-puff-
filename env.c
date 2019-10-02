@@ -2,27 +2,55 @@
 #include <string.h>
 #include "lisp.h"
 
-typedef enum procedure Procedure;
+typedef struct binding Binding;
 
-enum procedure {
-  PRIMITIVE,
-  COMPOUND
+/*
+Possible types for value:
+- number
+- pointer to pair
+- symbol/string
+- primitive procedure
+- compound procedure
+*/
+
+// Just a single-use object to hold variables to load into memory in
+// proper list-structure.
+struct binding {
+  char *variable;
+  Element contents;
 };
+
+static Binding initial_frame[] = {
+  {
+    "+", {
+      .type_tag = PRIMITIVE_PROCEDURE,
+      .contents.func_ptr = &add
+    }
+  }
+};
+
+// come up with description of primitive vars/procedures
+// run setup_env should load them into memory
 
 // (((+ 'primitive add) (- sub))
 //  ((cons cons)))
 
-void setup_environment(Element *env)
-{
-  // Pseudocode:
-  // cons(make_frame([+, add], [-, sub]), env);
-}
 
+// void setup_environment(Element *env)
+// {
+//   // Pseudocode:
+//   extend_environment(env, [+, add], [-, sub]);
+// }
 
-Element extend_environment(Element var_val_pairs, Element base_env)
-{
-  return make_cons(var_val_pairs, base_env);
-}
+// primitive_procedures = {
+//   { "+", &add },
+
+// }
+
+// Element extend_environment(Element var_val_pairs, Element base_env)
+// {
+//   return make_cons(var_val_pairs, base_env);
+// }
 
 // (foo 123) is also a valid variable-value combo.
 

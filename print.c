@@ -19,6 +19,14 @@ void print_element(Element *e)
     case SYMBOL:
       printf("%s", e->contents.symbol);
       break;
+    case PRIMITIVE_PROCEDURE:
+      // TODO: Show name. Probably will need to lookup in primitive table.
+      printf("#<primitive-procedure>\n");
+      break;
+    case COMPOUND_PROCEDURE:
+      // TODO: Show name.
+      printf("#<compound-procedure>\n");
+      break;
     }
     return;
   } else

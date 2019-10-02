@@ -58,8 +58,8 @@ void read_eval_print_loop(void)
   // val = eval_dispatch(exp, env);
 
   // Intermediate testing
-  Element exp2 = make_cons(exp, exp);
-  exp.contents.pair_ptr->car.contents.number = 5;
+  Element exp2 = add(exp.contents.pair_ptr);
+  // exp.contents.pair_ptr->car.contents.pair_ptr->car.contents.number = 5;
 
   // Print
   print_element(&exp2/*val*/);

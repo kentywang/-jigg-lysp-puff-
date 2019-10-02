@@ -26,6 +26,8 @@ Element make_cons(const Element x, const Element y)
   return e;
 }
 
+// We should write a list argument version of make_cons. 
+
 /*
 I think we want to treat the parsed input as a regular AST.
 
@@ -57,7 +59,7 @@ Element make_list(const Pair *p)
   if (p->cdr.type_tag == PAIR && !p->cdr.contents.pair_ptr) {
     Element e = {
       .type_tag = PAIR,
-      .contents = { NULL }
+      .contents.pair_ptr = NULL
     };
 
     // Any empty list is interchangeable with another.
@@ -86,6 +88,10 @@ Element clone(const Element x)
 
     strcpy(y.contents.symbol, x.contents.symbol);
 
+    return y;
+  case PRIMITIVE_PROCEDURE:
+  case COMPOUND_PROCEDURE:
+    // TODO: Not yet implemented.
     return y;
   }
 }
