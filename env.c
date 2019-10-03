@@ -42,11 +42,10 @@ static Binding initial_frame[] = {
 
 static Element load_frame(Binding *);
 
-
 // come up with description of primitive vars/procedures
 // run setup_env should load them into memory
 
-Element setup_environment(Element *env)
+Element setup_environment(void)
 {
   Element the_empty_environment = {
     .type_tag = PAIR,
@@ -67,22 +66,16 @@ list, and the other as the actual variable-and-value pair.
 */
 Element load_frame(Binding *b)
 {
-  Pair *frame_head = get_next_free_ptr();
-
-  Element frame = {
+  Element frame_head = {
     .type_tag = PAIR,
-    .contents.pair_ptr = frame_head
+    .contents.pair_ptr = NULL
   };
 
-  for (
-    Pair *curr_backbone = frame.contents.pair_ptr,
-    *p = get_next_free_ptr();
-    b->variable; // Stop when we encounter END_OF_BINDINGS.
-    ++b,
-    curr_backbone->cdr.contents.pair_ptr = get_next_free_ptr(),
-    curr_backbone = curr_backbone->cdr.contents.pair_ptr,
-    p = get_next_free_ptr()
-  ) {
+  if (b->variable) {
+    Pair *curr_backbone = get_next_free_ptr();
+    Pair *p = get_next_free_ptr();
+
+    frame_head.contents.pair_ptr = curr_backbone;
 
     p->car.type_tag = SYMBOL;
     // We could also copy the string into GCed memory.
@@ -92,15 +85,27 @@ Element load_frame(Binding *b)
     // Wrapping Pair pointer in Element is optional, since the default
     // initialization gives it the PAIR type tag.
     curr_backbone->car.contents.pair_ptr = p;
+
+    // Similar to above.
+    while ((++b)->variable) { // Stop when we encounter END_OF_BINDINGS.
+      curr_backbone->cdr.contents.pair_ptr = get_next_free_ptr();
+      curr_backbone = curr_backbone->cdr.contents.pair_ptr;
+
+      p = get_next_free_ptr();
+      p->car.type_tag = SYMBOL;
+      p->car.contents.symbol = b->variable;
+      p->cdr = b->contents;
+
+      curr_backbone->car.contents.pair_ptr = p;
+    }
   }
 
-  return frame;
+  return frame_head;
 }
 
-
-Element extend_environment(Element frame, Element base_env)
+Element extend_environment(const Element frame, const Element base_env)
 {
-  return make_cons(var_val_pairs, base_env);
+  return make_cons(frame, base_env);
 }
 
 // (foo 123) is also a valid variable-value combo.

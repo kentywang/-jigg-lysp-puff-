@@ -21,11 +21,11 @@ void print_element(Element *e)
       break;
     case PRIMITIVE_PROCEDURE:
       // TODO: Show name. Probably will need to lookup in primitive table.
-      printf("#<primitive-procedure>\n");
+      printf("#<primitive-procedure>");
       break;
     case COMPOUND_PROCEDURE:
       // TODO: Show name.
-      printf("#<compound-procedure>\n");
+      printf("#<compound-procedure>");
       break;
     }
     return;

@@ -62,6 +62,8 @@ extern Element make_list(const Pair *);
 extern Element make_cons(const Element, const Element);
 
 /* env.c */
+extern Element extend_environment(const Element, const Element);
+extern Element setup_environment(void);
 
 /* primitive.c */
 extern Element add(const Pair *);

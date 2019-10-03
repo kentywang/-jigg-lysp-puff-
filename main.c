@@ -33,6 +33,8 @@ Todos:
   approach might mean we'd need to manually set the CDR to the empty pair
   instead on relying on uninitialized Elements to always be empty pairs, or
   would it?)
+- Can we convert the functions that take Element pointers into functions that
+  take Elements?
 
 Lessons learned:
 - For mutating an object's pointer member, I can't pass the pointer into
@@ -40,7 +42,7 @@ Lessons learned:
 */
 
 static Element exp;
-// static Element env;
+static Element env;
 // void *val;
 // char continue;
 // void (*proc)(...);
@@ -51,7 +53,7 @@ static void read_eval_print_loop(void);
 
 int main(const int argc, const char *argv[])
 {
-  // setup_environment(&env);
+  env = setup_environment();
 
   read_eval_print_loop();
 }
@@ -66,11 +68,13 @@ void read_eval_print_loop(void)
   // val = eval_dispatch(exp, env);
 
   // Intermediate testing
-  Element exp2 = add(exp.contents.pair_ptr);
+  Element exp2 = multiply(exp.contents.pair_ptr);
   // exp.contents.pair_ptr->car.contents.pair_ptr->car.contents.number = 5;
 
   // Print
   print_element(&exp2/*val*/);
+  printf("\n");
+  print_element(&env/*val*/);
   printf("\n");
 
   // Free memory step?
