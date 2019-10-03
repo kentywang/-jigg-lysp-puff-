@@ -13,6 +13,8 @@ Questions:
 - How do you differentiate between newlines (ignored) and the enter key?
   A: Don't think you can, you need to listen to keyboard's shift.
 - Do we need to manually set CDR to null because of GC?
+- Should I create an abstraction layer to convert an argument list into
+  a va_list for primitive functions to apply?
 
 Tests:
   (1(  2  3  )4)
@@ -25,6 +27,12 @@ apple
 Todos:
 - Handle EOF.
 - Devise method of unit testing.
+- Remove unneeded wrapping of Pair pointers with an Element, since they're
+  initialized with PAIR type tags already. (GC might complicate this, we'll
+  need to reset the type_tag and content in get_next_free_ptr! Hmm, but that
+  approach might mean we'd need to manually set the CDR to the empty pair
+  instead on relying on uninitialized Elements to always be empty pairs, or
+  would it?)
 
 Lessons learned:
 - For mutating an object's pointer member, I can't pass the pointer into

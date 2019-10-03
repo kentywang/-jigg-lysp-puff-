@@ -65,6 +65,7 @@ extern Element make_cons(const Element, const Element);
 
 /* primitive.c */
 extern Element add(const Pair *);
+extern Element multiply(const Pair *);
 
 /* util.c */
 extern Boolean is_integer(char *);
