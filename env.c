@@ -3,8 +3,6 @@
 #include <string.h>
 #include "lisp.h"
 
-#define END_OF_BINDINGS 0
-
 static Element enclosing_environment(const Element);
 static Element first_frame(const Element);
 static Element load_frame(const Binding *);
@@ -14,29 +12,10 @@ static Element the_empty_environment = {
   .contents.pair_ptr = NULL
 };
 
-static Binding initial_frame[] = {
-  {
-    "+", {
-      .type_tag = PRIMITIVE_PROCEDURE,
-      .contents.func_ptr = &add
-    }
-  },
-  {
-    "*", {
-      .type_tag = PRIMITIVE_PROCEDURE,
-      .contents.func_ptr = &multiply
-    }
-  },
-  {
-    "x", {
-      .type_tag = NUMBER,
-      .contents.number = 322
-    }
-  },
-  {
-    END_OF_BINDINGS // Sentinel value.
-  }
-};
+// Multivariable frame of ((+ add) (- sub)).
+//        0   1   2   3   4
+// cars [ p2, - , p3, + , p1]
+// cdrs [ e0,sub, p4,add, e0] cdr at [0] is pointer to next frame.
 
 Boolean is_empty_environment(const Element env)
 {
@@ -159,8 +138,3 @@ Element enclosing_environment(const Element env)
 {
   return cdr(env);
 }
-
-// Multivariable frame of ((+ add) (- sub)).
-//        0   1   2   3   4
-// cars [ p2, - , p3, + , p1]
-// cdrs [ e0,sub, p4,add, e0] cdr at [0] is pointer to next frame.

@@ -1,6 +1,32 @@
 #include <stdlib.h>
 #include "lisp.h"
 
+#define END_OF_BINDINGS 0
+
+Binding initial_frame[] = {
+  {
+    "+", {
+      .type_tag = PRIMITIVE_PROCEDURE,
+      .contents.func_ptr = &add
+    }
+  },
+  {
+    "*", {
+      .type_tag = PRIMITIVE_PROCEDURE,
+      .contents.func_ptr = &multiply
+    }
+  },
+  {
+    "x", {
+      .type_tag = NUMBER,
+      .contents.number = 322
+    }
+  },
+  {
+    END_OF_BINDINGS // Sentinel value.
+  }
+};
+
 Element add(const Pair *p)
 {
   // Need to check if car is actually a number!

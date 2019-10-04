@@ -49,15 +49,6 @@ struct pair {
   Element cdr;
 };
 
-/*
-Possible types for value:
-- number
-- pointer to pair
-- symbol/string
-- primitive procedure
-- compound procedure
-*/
-
 // Just a single-use object to hold variables to load into memory in
 // proper list-structure.
 struct binding {
@@ -94,8 +85,7 @@ extern Element lookup_variable_value(char *, Element);
 extern Boolean is_empty_environment(const Element);
 
 /* primitive.c */
-extern Element add(const Pair *);
-extern Element multiply(const Pair *);
+extern Binding initial_frame[];
 
 /* util.c */
 extern Boolean is_integer(char *);
