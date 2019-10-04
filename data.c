@@ -95,3 +95,14 @@ Element clone(const Element x)
     return y;
   }
 }
+
+Element car(const Element x)
+{
+  // Add check?
+  return x.contents.pair_ptr->car;
+}
+
+Element cdr(const Element x)
+{
+  return x.contents.pair_ptr->cdr;
+}

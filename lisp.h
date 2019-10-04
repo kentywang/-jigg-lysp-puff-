@@ -4,9 +4,12 @@ typedef enum type Type;
 typedef union value Value;
 typedef struct element Element;
 typedef struct pair Pair;
+typedef struct binding Binding;
 
 enum error_codes {
-  BAD_IDENTIFIER
+  BAD_IDENTIFIER,
+  BAD_EXPRESSION,
+  UNBOUND_VARIABLE
 };
 
 // Be explicit that false should be 0.
@@ -20,7 +23,7 @@ enum boolean {
 // Be careful, though, since "initial values" means nothing after garbage
 // collection.
 struct element {
-  enum type {
+  enum {
     PAIR,
     NUMBER,
     SYMBOL,
@@ -29,7 +32,7 @@ struct element {
     PRIMITIVE_PROCEDURE,
     COMPOUND_PROCEDURE
   } type_tag;
-  union value {
+  union {
     Pair *pair_ptr;
     int number;
     char *symbol;
@@ -45,10 +48,29 @@ struct pair {
   Element cdr;
 };
 
+/*
+Possible types for value:
+- number
+- pointer to pair
+- symbol/string
+- primitive procedure
+- compound procedure
+*/
+
+// Just a single-use object to hold variables to load into memory in
+// proper list-structure.
+struct binding {
+  char *variable;
+  Element value;
+};
+
 /* main.c */
 
 /* read.c */
 extern void read_input(Element *);
+
+/* eval.c */
+extern Element eval_dispatch(Element, Element);
 
 /* print.c */
 extern void print_element(Element *);
@@ -60,10 +82,14 @@ extern char *string_alloc(int);
 /* data.c */
 extern Element make_list(const Pair *);
 extern Element make_cons(const Element, const Element);
+extern Element car(const Element);
+extern Element cdr(const Element);
 
 /* env.c */
 extern Element extend_environment(const Element, const Element);
 extern Element setup_environment(void);
+extern Binding find_binding(char *, Element);
+extern Boolean is_empty_environment(const Element);
 
 /* primitive.c */
 extern Element add(const Pair *);

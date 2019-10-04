@@ -35,6 +35,7 @@ Todos:
   would it?)
 - Can we convert the functions that take Element pointers into functions that
   take Elements?
+- Make backend more C-like.
 
 Lessons learned:
 - For mutating an object's pointer member, I can't pass the pointer into
@@ -43,7 +44,9 @@ Lessons learned:
 
 static Element exp;
 static Element env;
-// void *val;
+// Only used before each read's eval step.
+static Element the_global_environment;
+static Element val;
 // char continue;
 // void (*proc)(...);
 // void *argl[];
@@ -53,7 +56,7 @@ static void read_eval_print_loop(void);
 
 int main(const int argc, const char *argv[])
 {
-  env = setup_environment();
+  the_global_environment = setup_environment();
 
   read_eval_print_loop();
 }
@@ -64,17 +67,18 @@ void read_eval_print_loop(void)
   read_input(&exp);
 
   // Eval
-  // env = get_global_environment();
-  // val = eval_dispatch(exp, env);
+  val = eval_dispatch(exp, the_global_environment);
 
   // Intermediate testing
-  Element exp2 = multiply(exp.contents.pair_ptr);
+  // Element exp2 = multiply(exp.contents.pair_ptr);
   // exp.contents.pair_ptr->car.contents.pair_ptr->car.contents.number = 5;
 
   // Print
-  print_element(&exp2/*val*/);
-  printf("\n");
-  print_element(&env/*val*/);
+  // print_element(&exp2/*val*/);
+  // printf("\n");
+  // print_element(&env);
+  // printf("\n");
+  print_element(&val);
   printf("\n");
 
   // Free memory step?

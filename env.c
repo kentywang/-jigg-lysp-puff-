@@ -4,24 +4,6 @@
 
 #define END_OF_BINDINGS 0
 
-typedef struct binding Binding;
-
-/*
-Possible types for value:
-- number
-- pointer to pair
-- symbol/string
-- primitive procedure
-- compound procedure
-*/
-
-// Just a single-use object to hold variables to load into memory in
-// proper list-structure.
-struct binding {
-  char *variable;
-  Element contents;
-};
-
 static Binding initial_frame[] = {
   {
     "+", {
@@ -36,22 +18,33 @@ static Binding initial_frame[] = {
     }
   },
   {
+    "x", {
+      .type_tag = NUMBER,
+      .contents.number = 322
+    }
+  },
+  {
     END_OF_BINDINGS // Sentinel value.
   }
 };
 
-static Element load_frame(Binding *);
+static Element load_frame(const Binding *);
+static Element first_frame(const Element);
+static Element enclosing_environment(const Element);
 
-// come up with description of primitive vars/procedures
-// run setup_env should load them into memory
+static Element the_empty_environment = {
+  .type_tag = PAIR,
+  .contents.pair_ptr = NULL
+};
+
+Boolean is_empty_environment(const Element env)
+{
+  return env.type_tag == the_empty_environment.type_tag &&
+    env.contents.pair_ptr == the_empty_environment.contents.pair_ptr;
+}
 
 Element setup_environment(void)
 {
-  Element the_empty_environment = {
-    .type_tag = PAIR,
-    .contents.pair_ptr = NULL
-  };
-
   return extend_environment(load_frame(initial_frame), the_empty_environment);
 }
 
@@ -64,13 +57,15 @@ list, and the other as the actual variable-and-value pair.
  5 /\
   8  null
 */
-Element load_frame(Binding *b)
+Element load_frame(const Binding *b)
 {
   Element frame_head = {
     .type_tag = PAIR,
     .contents.pair_ptr = NULL
   };
 
+  // We need to handle the first element a bit differently since we set the
+  // return element to point to the first backbone.
   if (b->variable) {
     Pair *curr_backbone = get_next_free_ptr();
     Pair *p = get_next_free_ptr();
@@ -80,7 +75,7 @@ Element load_frame(Binding *b)
     p->car.type_tag = SYMBOL;
     // We could also copy the string into GCed memory.
     p->car.contents.symbol = b->variable;
-    p->cdr = b->contents;
+    p->cdr = b->value;
 
     // Wrapping Pair pointer in Element is optional, since the default
     // initialization gives it the PAIR type tag.
@@ -94,7 +89,7 @@ Element load_frame(Binding *b)
       p = get_next_free_ptr();
       p->car.type_tag = SYMBOL;
       p->car.contents.symbol = b->variable;
-      p->cdr = b->contents;
+      p->cdr = b->value;
 
       curr_backbone->car.contents.pair_ptr = p;
     }
@@ -107,6 +102,61 @@ Element extend_environment(const Element frame, const Element base_env)
 {
   return make_cons(frame, base_env);
 }
+
+Binding find_binding(char *var, Element env)
+{
+  Binding b = {
+    // This will be our signal to calling function indicating no binding
+    // found.
+    .variable = NULL
+  };
+
+  if (is_empty_environment(env))
+    return b;
+
+  do {
+    Element frame_scanner = first_frame(env);
+
+    // We still have pairs to scan through in frame.
+    while (frame_scanner.contents.pair_ptr && strcmp(var, car(car(frame_scanner)).contents.symbol) != 0) {
+      frame_scanner = cdr(frame_scanner);
+    }
+
+    if (frame_scanner.contents.pair_ptr) {
+      // We exited the while loop because we found the variable.
+      b.variable = var; // Use same string allocated as variable in parameter.
+      b.value = cdr(car(frame_scanner));
+      return b;
+    }
+
+    // Otherwise, not in this frame.
+  } while (!is_empty_environment(env = enclosing_environment(env)));
+
+  return b;
+}
+
+Element first_frame(const Element env)
+{
+  return car(env);
+}
+
+Element enclosing_environment(const Element env)
+{
+  return cdr(env);
+}
+// (define (find-binding var env)
+//   (define (scan vars vals)
+//     (cond ((null? vars)
+//            (find-binding var (enclosing-environment env)))
+//           ((eq? var (car vars))
+//            (cons vars vals))
+//           (else (scan (cdr vars)
+//                       (cdr vals)))))
+//   (if (eq? env the-empty-environment)
+//       false
+//       (let ((frame (first-frame env)))
+//         (scan (frame-variables frame)
+//               (frame-values frame)))))
 
 // (foo 123) is also a valid variable-value combo.
 
