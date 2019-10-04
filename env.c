@@ -5,7 +5,6 @@
 
 static Element enclosing_environment(const Element);
 static Element first_frame(const Element);
-static Element load_frame(const Binding *);
 
 static Element the_empty_environment = {
   .type_tag = PAIR,
@@ -29,56 +28,6 @@ Element setup_environment(void)
     load_frame(initial_frame),
     the_empty_environment
   );
-}
-
-/*
-We'll be generating two pairs at a time, one pair as the backbone of the
-list, and the other as the actual variable-and-value pair.
-  p
- /\
-2 /\
- 5 /\
-  8  null
-*/
-Element load_frame(const Binding *b)
-{
-  Element frame_head = {
-    .type_tag = PAIR,
-    .contents.pair_ptr = NULL
-  };
-
-  // We need to handle the first element a bit differently since we set the
-  // return element to point to the first backbone.
-  if (b->variable) {
-    Pair *curr_backbone = get_next_free_ptr();
-    Pair *p = get_next_free_ptr();
-
-    frame_head.contents.pair_ptr = curr_backbone;
-
-    p->car.type_tag = SYMBOL;
-    // We could also copy the string into GCed memory.
-    p->car.contents.symbol = b->variable;
-    p->cdr = b->value;
-
-    // Wrapping Pair pointer in Element is optional, since the default
-    // initialization gives it the PAIR type tag.
-    curr_backbone->car.contents.pair_ptr = p;
-
-    // Similar to above.
-    while ((++b)->variable) { // Stop when we encounter END_OF_BINDINGS.
-      curr_backbone->cdr.contents.pair_ptr = get_next_free_ptr();
-      curr_backbone = curr_backbone->cdr.contents.pair_ptr;
-
-      p = get_next_free_ptr();
-      p->car.type_tag = SYMBOL;
-      p->car.contents.symbol = b->variable;
-      p->cdr = b->value;
-
-      curr_backbone->car.contents.pair_ptr = p;
-    }
-  }
-
-  return frame_head;
 }
 
 Element extend_environment(const Element frame, const Element base_env)

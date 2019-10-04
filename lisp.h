@@ -86,6 +86,7 @@ extern Boolean is_empty_environment(const Element);
 
 /* primitive.c */
 extern Binding initial_frame[];
+extern Element load_frame(const Binding *);
 
 /* util.c */
 extern Boolean is_integer(char *);

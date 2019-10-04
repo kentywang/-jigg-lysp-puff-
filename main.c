@@ -15,6 +15,7 @@ Questions:
 - Do we need to manually set CDR to null because of GC?
 - Should I create an abstraction layer to convert an argument list into
   a va_list for primitive functions to apply?
+- Will staticall-declared functions be accessible from the outside?
 
 Tests:
   (1(  2  3  )4)
@@ -76,6 +77,8 @@ int main(int argc, const char *argv[])
   the_global_environment = setup_environment();
 
   read_eval_print_loop(verbose);
+  // print_element(the_global_environment);
+  // printf("\n");
 }
 
 void read_eval_print_loop(const Boolean verbose)
@@ -86,16 +89,8 @@ void read_eval_print_loop(const Boolean verbose)
   // Eval
   // val = eval_dispatch(exp, the_global_environment);
 
-  // Intermediate testing
-  // Element exp2 = multiply(exp.contents.pair_ptr);
-  // exp.contents.pair_ptr->car.contents.pair_ptr->car.contents.number = 5;
-
   // Print
   print_element(exp);
-  // printf("\n");
-  // print_element(&env);
-  // printf("\n");
-  // print_element(exp);
   printf("\n");
 
   // Free memory step?
