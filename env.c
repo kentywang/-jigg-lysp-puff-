@@ -5,6 +5,15 @@
 
 #define END_OF_BINDINGS 0
 
+static Element enclosing_environment(const Element);
+static Element first_frame(const Element);
+static Element load_frame(const Binding *);
+
+static Element the_empty_environment = {
+  .type_tag = PAIR,
+  .contents.pair_ptr = NULL
+};
+
 static Binding initial_frame[] = {
   {
     "+", {
@@ -29,15 +38,6 @@ static Binding initial_frame[] = {
   }
 };
 
-static Element load_frame(const Binding *);
-static Element first_frame(const Element);
-static Element enclosing_environment(const Element);
-
-static Element the_empty_environment = {
-  .type_tag = PAIR,
-  .contents.pair_ptr = NULL
-};
-
 Boolean is_empty_environment(const Element env)
 {
   return env.type_tag == the_empty_environment.type_tag &&
@@ -46,7 +46,10 @@ Boolean is_empty_environment(const Element env)
 
 Element setup_environment(void)
 {
-  return extend_environment(load_frame(initial_frame), the_empty_environment);
+  return extend_environment(
+    load_frame(initial_frame),
+    the_empty_environment
+  );
 }
 
 /*
@@ -156,26 +159,6 @@ Element enclosing_environment(const Element env)
 {
   return cdr(env);
 }
-// (define (find-binding var env)
-//   (define (scan vars vals)
-//     (cond ((null? vars)
-//            (find-binding var (enclosing-environment env)))
-//           ((eq? var (car vars))
-//            (cons vars vals))
-//           (else (scan (cdr vars)
-//                       (cdr vals)))))
-//   (if (eq? env the-empty-environment)
-//       false
-//       (let ((frame (first-frame env)))
-//         (scan (frame-variables frame)
-//               (frame-values frame)))))
-
-// (foo 123) is also a valid variable-value combo.
-
-// Rudimentary env (just add operator) at index 0.
-//        0   1   2   3   4
-// cars [ p3,   ,   , + ,   ]
-// cdrs [ e0,   ,   ,add,   ]
 
 // Multivariable frame of ((+ add) (- sub)).
 //        0   1   2   3   4

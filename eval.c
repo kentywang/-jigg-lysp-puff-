@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include "lisp.h"
 
-static Boolean self_evaluating(Element);
-static Boolean variable(Element);
+static Boolean self_evaluating(const Element);
+static Boolean variable(const Element);
 // static Boolean application(Element);
 
 // static Element apply(Element, Element);
 
-Element eval_dispatch(Element exp, Element env)
+Element eval_dispatch(const Element exp, const Element env)
 {
   if (self_evaluating(exp))
     return exp;
@@ -40,17 +40,16 @@ Element eval_dispatch(Element exp, Element env)
   exit(BAD_EXPRESSION);
 }
 
-Boolean self_evaluating(Element exp)
+Boolean self_evaluating(const Element exp)
 {
   // TODO: Check if string too.
   return exp.type_tag == NUMBER;
 }
 
-Boolean variable(Element exp)
+Boolean variable(const Element exp)
 {
   return exp.type_tag == SYMBOL;
 }
-
 
 // Boolean application(Element exp)
 // {

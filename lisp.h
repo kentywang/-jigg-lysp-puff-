@@ -9,7 +9,8 @@ typedef struct binding Binding;
 enum error_codes {
   BAD_IDENTIFIER,
   BAD_EXPRESSION,
-  UNBOUND_VARIABLE
+  UNBOUND_VARIABLE,
+  UNEXPECTED_ARG
 };
 
 // Be explicit that false should be 0.
@@ -67,13 +68,13 @@ struct binding {
 /* main.c */
 
 /* read.c */
-extern void read_input(Element *);
+extern void read_input(Element *, const Boolean);
 
 /* eval.c */
-extern Element eval_dispatch(Element, Element);
+extern Element eval_dispatch(const Element, const Element);
 
 /* print.c */
-extern void print_element(Element *);
+extern void print_element(const Element);
 
 /* memory.c */
 extern Pair *get_next_free_ptr(void);

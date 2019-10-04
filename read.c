@@ -4,13 +4,14 @@
 #include <string.h>
 #include "lisp.h"
 
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 100
+#define print_verbose verbosity && printf
 
-static char *read_word(void);
+static char *read_word(const char);
 static void read_parens(Element *);
 static char *create_symbol(void);
-static int getch(void);
-static void ungetch(int);
+static char getch(void);
+static void ungetch(const char);
 
 // For building word.
 static char word_buffer[BUFFER_SIZE];
@@ -19,38 +20,37 @@ static int buffer_index = 0;
 // For get/ungetch.
 static char char_buffer;
 
-void read_input(Element *e)
+static Boolean verbosity;
+
+void read_input(Element *e, const Boolean use_verbose)
 {
+  verbosity = use_verbose;
   int c;
 
   // Skip over leading whitespace.
-  while ((c = getch()) != EOF && isspace(c))
-    printf("read_input\n  space\n");
+  while (isspace(c = getch()))
+    print_verbose("read_input\n  space\n");
 
-  // Do something with EOF here.
-
-  // At start here, c is non-EOF, non-space char.
+  // At start here, c is non-space char.
   if (c == '(') {
-    printf("read_input\n  (\n");
+    print_verbose("read_input\n  (\n");
+
     e->type_tag = PAIR;
     read_parens(e);
 
-    // printf("Finished reading input,\n");
-    // print_element(e);
-    // printf("\n");
     return;
   }
-  // Included arithmetic symbols as valid components of a word.
-  else if (
+  if (
     isalnum(c) ||
-    c == '-'   ||
+    // Included arithmetic symbols as valid beginning of a word.
     c == '+'   ||
     c == '*'   ||
-    c == '/'
+    c == '/'   ||
+    c == '-'
   ) {
-    printf("read_input\n  %c\n", c);
-    word_buffer[buffer_index++] = c;
-    char *s = read_word();
+    print_verbose("read_input\n  %c at word buffer index %d\n", c, buffer_index);
+
+    char *s = read_word(c);
 
     if (is_integer(s)) {
       e->type_tag = NUMBER;
@@ -68,19 +68,18 @@ void read_input(Element *e)
   exit(BAD_IDENTIFIER);
 }
 
-char *read_word(void)
+char *read_word(const char prev_char)
 {
-  int c = getch();
+  word_buffer[buffer_index++] = prev_char;
 
-  if (c == EOF)
-    return create_symbol();
+  int c = getch();
 
   if (
     isspace(c) ||
     c == '('   ||
     c == ')'
   ) {
-    printf("read_word\n found ending condition\n");
+    print_verbose("read_word\n found ending condition\n");
 
     // Our job here is done. Return paren for another function to process.
     // We need to return character to buffer because the count variable must
@@ -88,26 +87,25 @@ char *read_word(void)
     ungetch(c);
     return create_symbol();
   }
-  printf("read_word\n  character is: %c\n", c);
-  word_buffer[buffer_index++] = c;
+  print_verbose("read_word\n  character is: %c at word buffer index %d\n", c, buffer_index);
 
-  return read_word();
+  return read_word(c);
 }
 
 void read_parens(Element *e)
 {
+  print_verbose("read_parens\n  starting...\n");
   int c;
 
-  // Skip over leading whitespace.
-  while ((c = getch()) != EOF && isspace(c)) // _Don't_ stop for newline here?
+  // Skip over leading whitespace. This will also keep reading after newline
+  // if we're still within a parens.
+  while (isspace(c = getch()))
     ;
 
-  // Do something with EOF here.
-
-  // At start here, c is non-EOF, non-space char.
+  // At start here, c is non-space char.
   // This should handle empty lists, since p is initialized to NULL?
   if (c == ')') {
-    printf("read_parens\n  )\n");
+    print_verbose("read_parens\n  )\n");
     e->contents.pair_ptr = NULL;
     return;
   }
@@ -115,36 +113,30 @@ void read_parens(Element *e)
   Pair *p = e->contents.pair_ptr = get_next_free_ptr();
   
   if (c == '(') {
-    printf("read_parens\n  (\n");
+    print_verbose("read_parens\n  (\n");
     p->car.type_tag = PAIR;
     read_parens(&p->car);
   } else {
-    printf("read_parens\n  %c\n", c);
+    print_verbose("read_parens\n  %c at word buffer index %d\n", c, buffer_index);
 
     // Almost the same as in read_input. Is there an abstraction here?
-    char *s = read_word();
+    char *s = read_word(c);
 
     if (is_integer(s)) {
       p->car.type_tag = NUMBER;
       p->car.contents.number = atoi(s);
+      print_verbose("read_parens\n  %d was an int\n", p->car.contents.number);
     } else {
       p->car.type_tag = SYMBOL;
       p->car.contents.symbol = s;
+      print_verbose("read_parens\n  %s was a symbol\n", p->car.contents.symbol);
     }
-
-    // If this was the last word in the list, we know read_word put ) in the
-    // buffer, so we skip over it.
-    getch();
   }
 
   // Continue with the cdr, but no need to assign it to anything since it's
   // already been done by set_next_free_ptr.
   p->cdr.type_tag = PAIR;
   read_parens(&p->cdr);
-
-  // printf("Finished reading between parens,\n");
-  // print_pair(p);
-  // printf("\n");
 
   return;
 }
@@ -159,7 +151,7 @@ char *create_symbol()
 
   // Will this handle empty strings?
   *(s + buffer_index) = '\0';
-  printf("create_symbol\n  \"%s\", size: %d\n", s, buffer_index);
+  print_verbose("create_symbol\n  \"%s\", size: %d\n", s, buffer_index);
 
   // Flush word buffer.
   buffer_index = 0;
@@ -167,16 +159,28 @@ char *create_symbol()
   return s;
 }
 
-int getch(void)
+char getch(void)
 {
-  int d = char_buffer ? char_buffer : getchar();
+  char c;
+
+  if (char_buffer)
+    c = char_buffer;
+  else {
+    // TODO: Need lower-level to discern whether reading new input.
+    // printf("> ");
+    c = getchar();
+  }
+
+  if (char_buffer && c == char_buffer)
+    print_verbose("getch\n  got %c from char buffer\n", c);
 
   char_buffer = 0;
 
-  return d;
+  return c;
 }
 
-void ungetch(int c)
+void ungetch(const char c)
 {
+  print_verbose("ungetch\n  %c now in char buffer\n", c);
   char_buffer = c;
 }

@@ -1,13 +1,6 @@
 #include <stdlib.h>
 #include "lisp.h"
 
-/*
-  p
- /\
-2 /\
- 5 /\
-  8  null
-*/
 Element add(const Pair *p)
 {
   // Need to check if car is actually a number!
