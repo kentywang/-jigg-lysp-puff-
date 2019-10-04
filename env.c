@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "lisp.h"
@@ -133,6 +134,17 @@ Binding find_binding(char *var, Element env)
   } while (!is_empty_environment(env = enclosing_environment(env)));
 
   return b;
+}
+
+Element lookup_variable_value(char *var, Element env)
+{
+  Binding b = find_binding(var, env);
+
+  if (b.variable)
+    return b.value;
+
+  fprintf(stderr, "Unbound variable: %s\n", var);
+  exit(UNBOUND_VARIABLE);
 }
 
 Element first_frame(const Element env)

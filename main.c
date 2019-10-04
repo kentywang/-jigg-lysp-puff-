@@ -36,10 +36,14 @@ Todos:
 - Can we convert the functions that take Element pointers into functions that
   take Elements?
 - Make backend more C-like.
+- Make read robust against newlines, live stdin.
+- Protect against overly long input words.
 
 Lessons learned:
 - For mutating an object's pointer member, I can't pass the pointer into
   a function; I must pass the object.
+- fseek and fgets don't work with live stdin (as opposed to from a text file).
+  For fgets, the program waits until we have _new_ input before getting.
 */
 
 static Element exp;
@@ -83,6 +87,6 @@ void read_eval_print_loop(void)
 
   // Free memory step?
 
-  // // Loop
-  // read_eval_print_loop();
+  // Loop
+  read_eval_print_loop();
 }

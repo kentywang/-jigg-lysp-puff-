@@ -4,10 +4,9 @@
 
 static Boolean self_evaluating(Element);
 static Boolean variable(Element);
-static Boolean application(Element);
+// static Boolean application(Element);
 
-static Element lookup_variable_value(char *, Element);
-static Element apply(Element, Element);
+// static Element apply(Element, Element);
 
 Element eval_dispatch(Element exp, Element env)
 {
@@ -33,8 +32,8 @@ Element eval_dispatch(Element exp, Element env)
   //   return eval_or(exp, env);
   // if (let(exp))
   //   return eval_dispatch(let_to_combination(exp), env);
-  if (application(exp))
-    return apply(exp, env);
+  // if (application(exp))
+  //   return apply(exp, env);
 
   // TODO: Let print_element print to stderr. 
   fprintf(stderr, "Unknown expression type.\n");
@@ -53,23 +52,12 @@ Boolean variable(Element exp)
 }
 
 
-Boolean application(Element exp)
-{
-  return exp.type_tag == PAIR;
-}
+// Boolean application(Element exp)
+// {
+//   return exp.type_tag == PAIR;
+// }
 
-Element lookup_variable_value(char *var, Element env)
-{
-  Binding b = find_binding(var, env);
+// Element apply(Element exp, Element env)
+// {
 
-  if (b.variable)
-    return b.value;
-
-  fprintf(stderr, "Unbound variable: %s\n", var);
-  exit(UNBOUND_VARIABLE);
-}
-
-Element apply(Element exp, Element env)
-{
-
-}
+// }

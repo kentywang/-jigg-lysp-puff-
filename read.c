@@ -1,16 +1,23 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "lisp.h"
 
-static char *read_word(int);
+#define BUFFER_SIZE 256
+
+static char *read_word(void);
 static void read_parens(Element *);
-static char *create_symbol(int);
+static char *create_symbol(void);
 static int getch(void);
 static void ungetch(int);
-static void buffered_seek(int);
 
-static int char_buffer = 0;
+// For building word.
+static char word_buffer[BUFFER_SIZE];
+static int buffer_index = 0;
+
+// For get/ungetch.
+static char char_buffer;
 
 void read_input(Element *e)
 {
@@ -33,9 +40,17 @@ void read_input(Element *e)
     // printf("\n");
     return;
   }
-  else if (isalnum(c) || c == '-') {
+  // Included arithmetic symbols as valid components of a word.
+  else if (
+    isalnum(c) ||
+    c == '-'   ||
+    c == '+'   ||
+    c == '*'   ||
+    c == '/'
+  ) {
     printf("read_input\n  %c\n", c);
-    char *s = read_word(1);
+    word_buffer[buffer_index++] = c;
+    char *s = read_word();
 
     if (is_integer(s)) {
       e->type_tag = NUMBER;
@@ -53,31 +68,30 @@ void read_input(Element *e)
   exit(BAD_IDENTIFIER);
 }
 
-char *read_word(int count)
+char *read_word(void)
 {
   int c = getch();
 
   if (c == EOF)
-    return create_symbol(count);
+    return create_symbol();
 
   if (
     isspace(c) ||
-    c == '(' ||
+    c == '('   ||
     c == ')'
   ) {
     printf("read_word\n found ending condition\n");
-
-    // Do something with EOF here.
 
     // Our job here is done. Return paren for another function to process.
     // We need to return character to buffer because the count variable must
     // be in sync.
     ungetch(c);
-    return create_symbol(count);
+    return create_symbol();
   }
   printf("read_word\n  character is: %c\n", c);
+  word_buffer[buffer_index++] = c;
 
-  return read_word(count + 1);
+  return read_word();
 }
 
 void read_parens(Element *e)
@@ -85,7 +99,7 @@ void read_parens(Element *e)
   int c;
 
   // Skip over leading whitespace.
-  while ((c = getch()) != EOF && isspace(c))
+  while ((c = getch()) != EOF && isspace(c)) // _Don't_ stop for newline here?
     ;
 
   // Do something with EOF here.
@@ -108,7 +122,7 @@ void read_parens(Element *e)
     printf("read_parens\n  %c\n", c);
 
     // Almost the same as in read_input. Is there an abstraction here?
-    char *s = read_word(1);
+    char *s = read_word();
 
     if (is_integer(s)) {
       p->car.type_tag = NUMBER;
@@ -135,19 +149,20 @@ void read_parens(Element *e)
   return;
 }
 
-char *create_symbol(int size)
+char *create_symbol()
 {
   // Reserve memory size for word.
-  char *s = string_alloc(size);
-
-  // Rewind stdin pointer to start of word.
-  buffered_seek(size);
+  char *s = string_alloc(buffer_index);
 
   // Copy over word from stdin to free pair's car.
-  fgets(s, size + 1, stdin);
+  strncpy(s, word_buffer, buffer_index);
+
   // Will this handle empty strings?
-  *(s + size) = '\0';
-  printf("create_symbol\n  \"%s\", size: %d\n", s, size);
+  *(s + buffer_index) = '\0';
+  printf("create_symbol\n  \"%s\", size: %d\n", s, buffer_index);
+
+  // Flush word buffer.
+  buffer_index = 0;
 
   return s;
 }
@@ -164,9 +179,4 @@ int getch(void)
 void ungetch(int c)
 {
   char_buffer = c;
-}
-
-void buffered_seek(int n)
-{
-  fseek(stdin, -n - (char_buffer ? 1 : 0), SEEK_CUR);
 }

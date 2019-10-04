@@ -20,7 +20,7 @@ void print_element(Element *e)
       printf("%s", e->contents.symbol);
       break;
     case PRIMITIVE_PROCEDURE:
-      // TODO: Show name. Probably will need to lookup in primitive table.
+      // TODO: Show name. Might need to add another parent primitive type.
       printf("#<primitive-procedure>");
       break;
     case COMPOUND_PROCEDURE:
