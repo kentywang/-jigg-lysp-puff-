@@ -4,8 +4,13 @@
 
 #define MEMORYLIMIT 1000
 
-static Pair memory[MEMORYLIMIT];
-static Pair *free_ptr = memory;
+static Pair memory1[MEMORYLIMIT], memory2[MEMORYLIMIT];
+static Pair *free_ptr = memory1;
+
+// For GC, need to load pointers to Elements in all registers into the
+// working memory in a list structure that will be traversed.
+
+// Which registers need to be preserved though?
 
 char *string_alloc(int n)
 {
@@ -18,7 +23,7 @@ Pair *get_next_free_ptr(void)
 {
   Pair *p = free_ptr;
 
-  if (free_ptr + 1 < memory + MEMORYLIMIT) {
+  if (free_ptr + 1 < memory1 + MEMORYLIMIT) {
     free_ptr += 1;
     return p;
   }
