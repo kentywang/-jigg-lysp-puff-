@@ -47,6 +47,7 @@ Todos:
 - Can we change a lot of our Element functions to Pair pointers without
   breaking their behavior within interpretation?
 - Implement manual tail recursion.
+- GC!
 
 Lessons learned:
 - For mutating an object's pointer member, I can't pass the pointer into
