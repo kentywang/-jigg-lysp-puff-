@@ -63,9 +63,6 @@ Boolean variable(const Element exp)
 
 Boolean application(const Element exp)
 {
-  // printf("Application:\n");
-  // print_element(exp);
-  // printf("\n");
   return exp.type_tag == PAIR;
 }
 
@@ -91,19 +88,9 @@ Element apply(const Element exp, const Element env)
     return (*procedure.contents.func_ptr)(arguments);
   else if (procedure.type_tag == COMPOUND_PROCEDURE)
     return apply_compound(procedure, arguments);
+
   // Not a procedure. TODO: Print operator.
   fprintf(stderr, "Not a procedure.\n");
-
-  // printf("  procedure:\n");
-  // print_element(procedure);
-  // printf("\n  arguments:");
-  // Element a = {
-  //   .type_tag = PAIR,
-  //   .contents.pair_ptr = arguments
-  // };
-  // print_element(a);
-  // printf("\n");
-
   exit(NOT_PROCEDURE);
   return procedure;
 }
@@ -139,10 +126,6 @@ Element make_procedure(const Element exp, const Element env)
     ).contents.pair_ptr
   };
 
-  // printf("make_procedure\n  procedure:\n");
-  // print_element(e);
-  // printf("\n");
-
   return e;
 }
 
@@ -153,21 +136,6 @@ Element apply_compound(const Element procedure, Pair *arguments)
     .contents.pair_ptr = arguments
   };
 
-  // printf("apply_compound\n  procedure:\n");
-  // print_element(procedure);
-  // printf("\n  arguments:");
-  // print_element(e);
-  // printf("\n");
-
-  // printf("  body:");
-  // print_element(procedure_body(procedure));
-  // printf("\n env:");
-  // print_element(extend_environment(
-  //   make_frame(procedure_parameters(procedure), e),
-  //   procedure_environment(procedure)
-  // ));
-  // printf("\n");
-
   return eval_sequence(
     procedure_body(procedure),
     extend_environment(
@@ -177,14 +145,18 @@ Element apply_compound(const Element procedure, Pair *arguments)
   );
 }
 
+// The compiler may perform tail-call optimization here. But we should
+// rework evaluation into a giant while loop with a stack to explicitly
+// control it.
 Element eval_sequence(const Element exps, const Element env)
 {
-  Element e = eval_dispatch(car(exps), env);
-
-  if (cdr(exps).contents.pair_ptr)
+  // Are there more expressions after the head?
+  if (cdr(exps).contents.pair_ptr) {
+    eval_dispatch(car(exps), env);
     return eval_sequence(cdr(exps), env);
+  }
 
-  return e;
+  return eval_dispatch(car(exps), env);
 }
 
 Element procedure_parameters(const Element exp)

@@ -20,6 +20,12 @@ Binding initial_frame[] = {
     }
   },
   {
+    "list", {
+      .type_tag = PRIMITIVE_PROCEDURE,
+      .contents.func_ptr = &make_list
+    }
+  },
+  {
     "x", {
       .type_tag = NUMBER,
       .contents.number = 322

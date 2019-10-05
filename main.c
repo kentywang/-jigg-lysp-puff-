@@ -7,6 +7,10 @@ list-structured data, but strings/symbols will actually be stored in
 dynamically-allocated memory via malloc/free. Though we could store them
 in lists eventually.
 
+Should we want to explicitly control call stacks, we can either store the
+stack within or as a separate structure from the GCed heap. Since stacks
+never build up if tail recursion is implemented properly, it doesn't make sense to keep it with other data that does need to be garbage collected.
+
 I think we should use the agnostic Element type more than the Pair pointer.
 
 Questions:
@@ -54,16 +58,6 @@ Lessons learned:
 
 */
 
-static Element exp;
-static Element env;
-// Only used before each read's eval step.
-static Element the_global_environment;
-static Element val;
-// char continue;
-// void (*proc)(...);
-// void *argl[];
-// void *unev;
-
 static void read_eval_print_loop(const Boolean);
 
 int main(int argc, const char *argv[])
@@ -82,27 +76,26 @@ int main(int argc, const char *argv[])
         return UNEXPECTED_ARG;
       }
 
-  the_global_environment = setup_environment();
-
   read_eval_print_loop(verbose);
-  // print_element(the_global_environment);
-  // printf("\n");
 }
 
 void read_eval_print_loop(const Boolean verbose)
 {
-  // Read
-  read_input(&exp, verbose);
+  Element exp;
+  Element val;
+  Element env = setup_environment();
 
-  // Eval
-  val = eval_dispatch(exp, the_global_environment);
+  while (TRUE) {
+    // Read
+    read_input(&exp, verbose);
 
-  // Print
-  print_element(val);
-  printf("\n");
+    // Eval
+    val = eval_dispatch(exp, env);
 
-  // Free memory step?
+    // Print
+    print_element(val);
+    printf("\n");
 
-  // Loop
-  read_eval_print_loop(verbose);
+    // Free memory step?
+  }
 }
