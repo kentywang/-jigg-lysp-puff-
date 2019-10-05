@@ -10,7 +10,9 @@ enum error_codes {
   BAD_IDENTIFIER,
   BAD_EXPRESSION,
   UNBOUND_VARIABLE,
-  UNEXPECTED_ARG
+  UNEXPECTED_ARG,
+  NOT_PROCEDURE,
+  ARITY_MISMATCH,
 };
 
 // Be explicit that false should be 0.
@@ -82,6 +84,7 @@ extern Element extend_environment(const Element, const Element);
 extern Element setup_environment(void);
 extern Binding find_binding(char *, Element);
 extern Element lookup_variable_value(char *, Element);
+extern Element make_frame(const Element, const Element);
 extern Boolean is_empty_environment(const Element);
 
 /* primitive.c */

@@ -3,9 +3,6 @@
 #include <string.h>
 #include "lisp.h"
 
-static Element enclosing_environment(const Element);
-static Element first_frame(const Element);
-
 static Element the_empty_environment = {
   .type_tag = PAIR,
   .contents.pair_ptr = NULL
@@ -43,11 +40,16 @@ Binding find_binding(char *var, Element env)
     .variable = NULL
   };
 
+  // Since these single-use abstractions are just aliases, let's just
+  // define them within this function.
+  Element (*first_frame)(const Element) = &car;
+  Element (*enclosing_environment)(const Element) = &cdr;
+
   if (is_empty_environment(env))
     return b;
 
   do {
-    Element frame_scanner = first_frame(env);
+    Element frame_scanner = (*first_frame)(env);
 
     // We still have pairs to scan through in frame.
     while (frame_scanner.contents.pair_ptr && strcmp(var, car(car(frame_scanner)).contents.symbol) != 0) {
@@ -62,7 +64,7 @@ Binding find_binding(char *var, Element env)
     }
 
     // Otherwise, not in this frame.
-  } while (!is_empty_environment(env = enclosing_environment(env)));
+  } while (!is_empty_environment(env = (*enclosing_environment)(env)));
 
   return b;
 }
@@ -78,12 +80,30 @@ Element lookup_variable_value(char *var, Element env)
   exit(UNBOUND_VARIABLE);
 }
 
-Element first_frame(const Element env)
+// (a b c) (1 2 3) => ((a . 1) (b . 2) (c . 3))
+Element make_frame(const Element bindings, const Element values)
 {
-  return car(env);
-}
+  // If only one of bindings or values is null, we have a parameter-argument
+  // mismatch. Hopefully !s works.
+  // TODO: List procedure name, number of args vs. parameters
+  if (!bindings.contents.pair_ptr != !values.contents.pair_ptr) {
+    fprintf(stderr, "Arity mismatch.\n");
+    exit(ARITY_MISMATCH);
+  }
 
-Element enclosing_environment(const Element env)
-{
-  return cdr(env);
+  // Both empty.
+  if (!bindings.contents.pair_ptr && !values.contents.pair_ptr) {
+    Element e = {
+      .type_tag = PAIR,
+      .contents.pair_ptr = NULL
+    };
+
+    return e;
+  }
+
+  // Still have parameters and arguments.
+  return make_cons(
+    make_cons(car(bindings), car(values)),
+    make_frame(cdr(bindings), cdr(values))
+  );
 }

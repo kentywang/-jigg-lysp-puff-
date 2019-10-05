@@ -1,12 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "lisp.h"
 
 static Boolean self_evaluating(const Element);
 static Boolean variable(const Element);
-// static Boolean application(Element);
+static Boolean application(const Element);
+static Boolean lambda(const Element);
 
-// static Element apply(Element, Element);
+static Element make_procedure(const Element, const Element);
+static Element apply(const Element, const Element);
+static Element list_of_values(const Element, const Element);
+static Element make_procedure(const Element, const Element);
+static Element apply_compound(const Element, Pair *);
+static Element procedure_parameters(const Element);
+static Element procedure_body(const Element);
+static Element procedure_environment(const Element);
+static Element eval_sequence(const Element, const Element);
 
 Element eval_dispatch(const Element exp, const Element env)
 {
@@ -22,8 +32,8 @@ Element eval_dispatch(const Element exp, const Element env)
   //   return eval_definition(exp, env);
   // if (if_expression(exp))
   //   return eval_if(exp, env);
-  // if (lambda(exp))
-  //   return make_procedure(exp, env);
+  if (lambda(exp))
+    return make_procedure(exp, env);
   // if (cond(exp))
   //   return eval_dispatch(cond_to_if(exp), env);
   // if (and(exp))
@@ -32,8 +42,8 @@ Element eval_dispatch(const Element exp, const Element env)
   //   return eval_or(exp, env);
   // if (let(exp))
   //   return eval_dispatch(let_to_combination(exp), env);
-  // if (application(exp))
-  //   return apply(exp, env);
+  if (application(exp))
+    return apply(exp, env);
 
   // TODO: Let print_element print to stderr. 
   fprintf(stderr, "Unknown expression type.\n");
@@ -51,12 +61,143 @@ Boolean variable(const Element exp)
   return exp.type_tag == SYMBOL;
 }
 
-// Boolean application(Element exp)
-// {
-//   return exp.type_tag == PAIR;
-// }
+Boolean application(const Element exp)
+{
+  // printf("Application:\n");
+  // print_element(exp);
+  // printf("\n");
+  return exp.type_tag == PAIR;
+}
 
-// Element apply(Element exp, Element env)
-// {
+Boolean lambda(const Element exp)
+{
+  return (
+    exp.type_tag == PAIR &&
+    car(exp).type_tag == SYMBOL &&
+    strcmp(car(exp).contents.symbol, "lambda") == 0
+  );
+}
 
-// }
+Element apply(const Element exp, const Element env)
+{
+  Element (*operator)(const Element) = &car;
+  Element (*operands)(const Element) = &cdr;
+
+  Element procedure = eval_dispatch((*operator)(exp), env);
+  Pair *arguments = list_of_values((*operands)(exp), env).contents.pair_ptr;
+
+  if (procedure.type_tag == PRIMITIVE_PROCEDURE)
+    // Does this allow null args?
+    return (*procedure.contents.func_ptr)(arguments);
+  else if (procedure.type_tag == COMPOUND_PROCEDURE)
+    return apply_compound(procedure, arguments);
+  // Not a procedure. TODO: Print operator.
+  fprintf(stderr, "Not a procedure.\n");
+
+  // printf("  procedure:\n");
+  // print_element(procedure);
+  // printf("\n  arguments:");
+  // Element a = {
+  //   .type_tag = PAIR,
+  //   .contents.pair_ptr = arguments
+  // };
+  // print_element(a);
+  // printf("\n");
+
+  exit(NOT_PROCEDURE);
+  return procedure;
+}
+
+Element list_of_values(const Element operands, const Element env)
+{
+  Element e = {
+    .type_tag = PAIR,
+    .contents.pair_ptr = NULL
+  };
+
+  if (!operands.contents.pair_ptr) {
+    return e;
+  }
+
+  // Instead of defer argument evaluation order to the C compiled to decide,
+  // we can choose to explicitly set the order to left-to-right.
+  e = eval_dispatch(car(operands), env);
+
+  return make_cons(e, list_of_values(cdr(operands), env));
+}
+
+Element make_procedure(const Element exp, const Element env)
+{
+  Element e = {
+    .type_tag = COMPOUND_PROCEDURE,
+    .contents.pair_ptr = make_cons(
+      car(cdr(exp)), // Lambda parameters
+      make_cons(
+        cdr(cdr(exp)), // Lambda body
+        env
+      )
+    ).contents.pair_ptr
+  };
+
+  // printf("make_procedure\n  procedure:\n");
+  // print_element(e);
+  // printf("\n");
+
+  return e;
+}
+
+Element apply_compound(const Element procedure, Pair *arguments)
+{
+  Element e = {
+    .type_tag = PAIR,
+    .contents.pair_ptr = arguments
+  };
+
+  // printf("apply_compound\n  procedure:\n");
+  // print_element(procedure);
+  // printf("\n  arguments:");
+  // print_element(e);
+  // printf("\n");
+
+  // printf("  body:");
+  // print_element(procedure_body(procedure));
+  // printf("\n env:");
+  // print_element(extend_environment(
+  //   make_frame(procedure_parameters(procedure), e),
+  //   procedure_environment(procedure)
+  // ));
+  // printf("\n");
+
+  return eval_sequence(
+    procedure_body(procedure),
+    extend_environment(
+      make_frame(procedure_parameters(procedure), e),
+      procedure_environment(procedure)
+    )
+  );
+}
+
+Element eval_sequence(const Element exps, const Element env)
+{
+  Element e = eval_dispatch(car(exps), env);
+
+  if (cdr(exps).contents.pair_ptr)
+    return eval_sequence(cdr(exps), env);
+
+  return e;
+}
+
+Element procedure_parameters(const Element exp)
+{
+  return car(exp);
+}
+
+Element procedure_body(const Element exp)
+{
+  return car(cdr(exp));
+}
+
+Element procedure_environment(const Element exp)
+{
+  return cdr(cdr(exp));
+}

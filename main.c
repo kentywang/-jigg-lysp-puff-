@@ -38,12 +38,20 @@ Todos:
 - Make backend more C-like.
 - Make read robust against newlines, live stdin.
 - Protect against overly long input words.
+- Unify procedures used in both interpreted and backend, or separate them.
+- Expand verbose to eval/apply.
+- Can we change a lot of our Element functions to Pair pointers without
+  breaking their behavior within interpretation?
+- Implement manual tail recursion.
 
 Lessons learned:
 - For mutating an object's pointer member, I can't pass the pointer into
   a function; I must pass the object.
 - fseek and fgets don't work with live stdin (as opposed to from a text file).
   For fgets, the program waits until we have _new_ input before getting.
+- () and [] has higher precedence than ++ and *, despite some online sources
+  stating otherwise.
+
 */
 
 static Element exp;
@@ -87,10 +95,10 @@ void read_eval_print_loop(const Boolean verbose)
   read_input(&exp, verbose);
 
   // Eval
-  // val = eval_dispatch(exp, the_global_environment);
+  val = eval_dispatch(exp, the_global_environment);
 
   // Print
-  print_element(exp);
+  print_element(val);
   printf("\n");
 
   // Free memory step?

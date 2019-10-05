@@ -43,9 +43,9 @@ void read_input(Element *e, const Boolean use_verbose)
   if (
     isalnum(c) ||
     // Included arithmetic symbols as valid beginning of a word.
-    c == '+'   ||
-    c == '*'   ||
-    c == '/'   ||
+    c == '+' ||
+    c == '*' ||
+    c == '/' ||
     c == '-'
   ) {
     print_verbose("read_input\n  %c at word buffer index %d\n", c, buffer_index);

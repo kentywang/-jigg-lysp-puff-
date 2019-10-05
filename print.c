@@ -25,7 +25,7 @@ void print_element(const Element e)
     break;
   case COMPOUND_PROCEDURE:
     // TODO: Show name.
-    printf("#<compound-procedure>");
+    printf("#<procedure>");
     break;
   }
 }

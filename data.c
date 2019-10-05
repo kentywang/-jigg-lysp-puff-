@@ -71,7 +71,10 @@ Element make_list(const Pair *p)
 
 Element clone(const Element x)
 {
-  Element y;
+  Element y = {
+    .type_tag = PAIR,
+    .contents.pair_ptr = NULL
+  };
 
   switch (x.type_tag) {
   // C's pass-by-value ensures numbers are always copied.
