@@ -25,6 +25,9 @@ void print_element_dispatch(const Element e)
   case NUMBER:
     printf("%d", e.contents.number);
     break;
+  case BOOLEAN:
+    printf("%s", e.contents.truth ? TRUE_SYMBOL : FALSE_SYMBOL);
+    break;
   case SYMBOL:
     printf("%s", e.contents.symbol);
     break;
@@ -41,17 +44,17 @@ void print_element_dispatch(const Element e)
 
 void print_pair(const Pair *p)
 {
-  if (
-    p->car.type_tag == SYMBOL &&
-    strcmp(p->car.contents.symbol, QUOTE) == 0
-  ) {
-    printf("\'");
-    print_pair_contents(p->cdr.contents.pair_ptr);
-  } else {
+  // if (
+  //   p->car.type_tag == SYMBOL &&
+  //   strcmp(p->car.contents.symbol, QUOTE) == 0
+  // ) {
+  //   printf("\'");
+  //   print_pair_contents(p->cdr.contents.pair_ptr);
+  // } else {
   printf("(");
   print_pair_contents(p);
   printf(")");
-  }
+  // }
 }
 
 void print_pair_contents(const Pair *p)

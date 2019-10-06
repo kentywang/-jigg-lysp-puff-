@@ -79,6 +79,7 @@ Element clone(const Element x)
   switch (x.type_tag) {
   // C's pass-by-value ensures numbers are always copied.
   case NUMBER:
+  case BOOLEAN:
   // We copy the reference, which is what we want with non-atomic elements.
   case PAIR:
   // Primitives procedures are stored by the address of their functions.
@@ -106,4 +107,10 @@ Element car(const Element x)
 Element cdr(const Element x)
 {
   return x.contents.pair_ptr->cdr;
+}
+
+Boolean is_true(const Element x)
+{
+  // Anything but a strict true is false.
+  return x.type_tag == BOOLEAN && x.contents.truth;
 }

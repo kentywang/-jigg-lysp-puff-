@@ -5,6 +5,7 @@
 
 static Element add(const Pair *);
 static Element multiply(const Pair *);
+static Element equals(const Pair *);
 
 Binding initial_frame[] = {
   {
@@ -17,6 +18,12 @@ Binding initial_frame[] = {
     "*", {
       .type_tag = PRIMITIVE_PROCEDURE,
       .contents.func_ptr = &multiply
+    }
+  },
+  {
+    "=", {
+      .type_tag = PRIMITIVE_PROCEDURE,
+      .contents.func_ptr = &equals
     }
   },
   {
@@ -109,9 +116,28 @@ Element multiply(const Pair *p)
     .contents = p->car.contents
   };
 
-  // Add result of adding up cdr to car, if cdr isn't null.
+  // Add result of multiplying cdr to product car, if cdr isn't null.
   if (!(p->cdr.type_tag == PAIR && !p->cdr.contents.pair_ptr))
     e.contents.number *= multiply(p->cdr.contents.pair_ptr).contents.number;
+
+  return e;
+}
+
+Element equals(const Pair *p)
+{
+  // Need to check if car is actually a number!
+  Element e = {
+    .type_tag = BOOLEAN,
+    .contents.truth = FALSE
+  };
+
+  if (
+    p->car.type_tag == NUMBER &&
+    p->cdr.type_tag == PAIR &&
+    p->cdr.contents.pair_ptr->car.type_tag == NUMBER &&
+    p->car.contents.number == p->cdr.contents.pair_ptr->car.contents.number
+  )
+    e.contents.truth = TRUE;
 
   return e;
 }

@@ -16,6 +16,7 @@ static Element apply_compound(const Element, Pair *);
 static Element eval_sequence(const Element, const Element);
 static Element eval_definition(const Element, const Element);
 static void define_variable(const Element, const Element, const Element);
+static Element eval_if(const Element, const Element);
 
 static Element procedure_parameters(const Element);
 static Element procedure_body(const Element);
@@ -39,8 +40,8 @@ Element eval_dispatch(const Element exp, const Element env)
   //   return eval_assignment(exp, env);
   if (special_form(DEFINE, exp))
     return eval_definition(exp, env);
-  // if (if_expression(exp))
-  //   return eval_if(exp, env);
+  if (special_form(IF, exp))
+    return eval_if(exp, env);
   if (special_form(LAMBDA, exp))
     return make_procedure(exp, env);
   // if (cond(exp))
@@ -207,6 +208,15 @@ void define_variable(
     make_cons(var, val),
     first_frame(env)
   );
+}
+
+Element eval_if(const Element exp, const Element env)
+{
+  if (is_true(eval_dispatch(car(cdr(exp)), env))) {
+    return eval_dispatch(car(cdr(cdr(exp))), env);
+  }
+
+  return eval_dispatch(car(cdr(cdr(cdr(exp)))), env);
 }
 
 Element text_of_quotation(const Element exp)

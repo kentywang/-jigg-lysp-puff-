@@ -3,7 +3,9 @@
 #define QUOTE "quote"
 #define QUOTE_LENGTH 5 // The length of the word "quote"
 #define DEFINE "define"
-
+#define IF "if"
+#define TRUE_SYMBOL "true"
+#define FALSE_SYMBOL "false"
 #define print_verbose verbosity && printf
 
 typedef enum boolean Boolean;
@@ -37,6 +39,7 @@ struct element {
     PAIR,
     NUMBER,
     SYMBOL,
+    BOOLEAN,
     // The following are never read from input, and are never exposed to
     // users:
     PRIMITIVE_PROCEDURE,
@@ -46,10 +49,10 @@ struct element {
     Pair *pair_ptr;
     int number;
     char *symbol;
+    Boolean truth;
     // PRIMITIVE_PROCEDURE uses a Pair pointer like PAIR.
     Element (*func_ptr)(const Pair *);
     // Need to store string too.
-    // And boolean?
   } contents;
 };
 
@@ -86,6 +89,7 @@ extern Element make_list(const Pair *);
 extern Element make_cons(const Element, const Element);
 extern Element car(const Element);
 extern Element cdr(const Element);
+extern Boolean is_true(const Element);
 
 /* env.c */
 extern Element extend_environment(const Element, const Element);

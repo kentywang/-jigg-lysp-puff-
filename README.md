@@ -59,6 +59,9 @@ Todos:
   them to a quote list. Not sure if this affects any behavior.
 - Add full list of primitives.
 - Does empty list work? (i.e. '())
+- Support reading boolean.
+- Two quotes in a row like in (if (= 1 1) 'yes 'no) or (list 'oh 'wow) is
+  not working properly.
 
 Overview of features added:
 - Verbose option for tracing evaluation (WIP)
@@ -67,6 +70,7 @@ Overview of features added:
 - Quotations
 - Converts single quotes in input into quote lists and does the opposite
   conversion on output.
+- Definitions
 
 Lessons learned:
 - For mutating an object's pointer member, I can't pass the pointer into
