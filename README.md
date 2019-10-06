@@ -28,6 +28,11 @@ Tests:
     (1(  -2  3a  )4)
 apple
    apple
+(define fact
+  (lambda (n)
+    (if (= n 1)
+        1
+        (* (fact (+ n -1)) n))))
 
 Todos:
 - Devise method of unit testing.
