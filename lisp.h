@@ -1,4 +1,7 @@
 /* Global */
+#define QUOTE "quote"
+#define QUOTE_LENGTH 5 // The length of the word "quote"
+
 typedef enum boolean Boolean;
 typedef enum type Type;
 typedef union value Value;

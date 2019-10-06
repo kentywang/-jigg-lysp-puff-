@@ -57,6 +57,10 @@ Todos:
 - I'm not treating single-quotes in quotes literally; it's still converting
   them to a quote list. Not sure if this affects any behavior.
 
+Overview of features added:
+- Converts single quotes in input into quote lists and does the opposite
+  conversion on output.
+
 Lessons learned:
 - For mutating an object's pointer member, I can't pass the pointer into
   a function; I must pass the object.

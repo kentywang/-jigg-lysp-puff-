@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "lisp.h"
 
 static void print_pair(const Pair *);
@@ -32,9 +33,17 @@ void print_element(const Element e)
 
 void print_pair(const Pair *p)
 {
+  if (
+    p->car.type_tag == SYMBOL &&
+    strcmp(p->car.contents.symbol, QUOTE) == 0
+  ) {
+    printf("\'");
+    print_pair_contents(p->cdr.contents.pair_ptr);
+  } else {
   printf("(");
   print_pair_contents(p);
   printf(")");
+  }
 }
 
 void print_pair_contents(const Pair *p)

@@ -5,7 +5,6 @@
 #include "lisp.h"
 
 #define BUFFER_SIZE 100
-#define QUOTE_LENGTH 5 // The length of the word "quote"
 #define print_verbose verbosity && printf
 
 static void read_dispatch(Element *);
@@ -77,7 +76,7 @@ void read_dispatch(Element *e)
 
     e->contents.pair_ptr->car.type_tag = SYMBOL;
     e->contents.pair_ptr->car.contents.symbol = string_alloc(QUOTE_LENGTH);
-    strcpy(e->contents.pair_ptr->car.contents.symbol, "quote");
+    strcpy(e->contents.pair_ptr->car.contents.symbol, QUOTE);
 
     e->contents.pair_ptr->cdr.type_tag = PAIR;
     e->contents.pair_ptr->cdr.contents.pair_ptr = get_next_free_ptr();
