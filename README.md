@@ -71,6 +71,7 @@ Overview of features added:
 - Converts single quotes in input into quote lists and does the opposite
   conversion on output.
 - Definitions
+- Conditional expression and booleans.
 
 Lessons learned:
 - For mutating an object's pointer member, I can't pass the pointer into

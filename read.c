@@ -51,7 +51,8 @@ void read_dispatch(Element *e)
     c == '+' ||
     c == '*' ||
     c == '/' ||
-    c == '-'
+    c == '-' ||
+    c == '='
   ) {
     print_verbose("read_dispatch\n  %c at word buffer index %d\n", c, buffer_index);
 
