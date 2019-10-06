@@ -7,6 +7,7 @@ static Boolean self_evaluating(const Element);
 static Boolean variable(const Element);
 static Boolean application(const Element);
 static Boolean lambda(const Element);
+static Boolean quoted(const Element);
 
 static Element make_procedure(const Element, const Element);
 static Element apply(const Element, const Element);
@@ -17,6 +18,7 @@ static Element procedure_parameters(const Element);
 static Element procedure_body(const Element);
 static Element procedure_environment(const Element);
 static Element eval_sequence(const Element, const Element);
+static Element text_of_quotation(const Element);
 
 Element eval_dispatch(const Element exp, const Element env)
 {
@@ -24,8 +26,8 @@ Element eval_dispatch(const Element exp, const Element env)
     return exp;
   if (variable(exp))
     return lookup_variable_value(exp.contents.symbol, env);
-  // if (quoted(exp))
-  //   return text_of_quotation(exp);
+  if (quoted(exp))
+    return text_of_quotation(exp);
   // if (assignment(exp))
   //   return eval_assignment(exp, env);
   // if (definition(exp))
@@ -72,6 +74,15 @@ Boolean lambda(const Element exp)
     exp.type_tag == PAIR &&
     car(exp).type_tag == SYMBOL &&
     strcmp(car(exp).contents.symbol, "lambda") == 0
+  );
+}
+
+Boolean quoted(const Element exp)
+{
+  return (
+    exp.type_tag == PAIR &&
+    car(exp).type_tag == SYMBOL &&
+    strcmp(car(exp).contents.symbol, "quote") == 0
   );
 }
 
@@ -158,6 +169,12 @@ Element eval_sequence(const Element exps, const Element env)
 
   return eval_dispatch(car(exps), env);
 }
+
+Element text_of_quotation(const Element exp)
+{
+  return car(cdr(exp));
+}
+
 
 Element procedure_parameters(const Element exp)
 {
