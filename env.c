@@ -40,16 +40,11 @@ Binding find_binding(char *var, Element env)
     .variable = NULL
   };
 
-  // Since these single-use abstractions are just aliases, let's just
-  // define them within this function.
-  Element (*first_frame)(const Element) = &car;
-  Element (*enclosing_environment)(const Element) = &cdr;
-
   if (is_empty_environment(env))
     return b;
 
   do {
-    Element frame_scanner = (*first_frame)(env);
+    Element frame_scanner = first_frame(env);
 
     // We still have pairs to scan through in frame.
     while (frame_scanner.contents.pair_ptr && strcmp(var, car(car(frame_scanner)).contents.symbol) != 0) {
@@ -64,7 +59,7 @@ Binding find_binding(char *var, Element env)
     }
 
     // Otherwise, not in this frame.
-  } while (!is_empty_environment(env = (*enclosing_environment)(env)));
+  } while (!is_empty_environment(env = enclosing_environment(env)));
 
   return b;
 }
@@ -106,4 +101,14 @@ Element make_frame(const Element bindings, const Element values)
     make_cons(car(bindings), car(values)),
     make_frame(cdr(bindings), cdr(values))
   );
+}
+
+Element first_frame(const Element env)
+{
+  return car(env);
+}
+
+Element enclosing_environment(const Element env)
+{
+  return cdr(env);
 }

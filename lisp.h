@@ -1,6 +1,10 @@
 /* Global */
+#define LAMBDA "lambda"
 #define QUOTE "quote"
 #define QUOTE_LENGTH 5 // The length of the word "quote"
+#define DEFINE "define"
+
+#define print_verbose verbosity && printf
 
 typedef enum boolean Boolean;
 typedef enum type Type;
@@ -89,6 +93,8 @@ extern Element setup_environment(void);
 extern Binding find_binding(char *, Element);
 extern Element lookup_variable_value(char *, Element);
 extern Element make_frame(const Element, const Element);
+extern Element first_frame(const Element);
+extern Element enclosing_environment(const Element);
 extern Boolean is_empty_environment(const Element);
 
 /* primitive.c */

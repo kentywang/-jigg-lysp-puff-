@@ -5,11 +5,9 @@
 #include "lisp.h"
 
 #define BUFFER_SIZE 100
-#define print_verbose verbosity && printf
 
 static void read_dispatch(Element *);
 static char *read_word(const char);
-static char *read_quote(const char);
 static void read_parens(Element *);
 static char *create_symbol(void);
 static char getch(void);
@@ -43,6 +41,7 @@ void read_dispatch(Element *e)
   if (c == '(') {
     print_verbose("read_dispatch\n  (\n");
 
+    // TODO: Why not move this into the function?
     e->type_tag = PAIR;
     return read_parens(e);
   }
@@ -115,11 +114,6 @@ char *read_word(const char prev_char)
   return read_word(c);
 }
 
-// char *read_quote(const char)
-// {
-
-// }
-
 void read_parens(Element *e)
 {
   print_verbose("read_parens\n  starting...\n");
@@ -144,6 +138,25 @@ void read_parens(Element *e)
     print_verbose("read_parens\n  (\n");
     p->car.type_tag = PAIR;
     read_parens(&p->car);
+  } else if (c == '\'') {
+    // TODO: Nearly the same as in read_input. Must abstract this.
+    p->car.type_tag = PAIR;
+    p->car.contents.pair_ptr = get_next_free_ptr();
+
+    p->car.contents.pair_ptr->car.type_tag = SYMBOL;
+    p->car.contents.pair_ptr->car.contents.symbol = string_alloc(QUOTE_LENGTH);
+    strcpy(p->car.contents.pair_ptr->car.contents.symbol, QUOTE);
+
+    p->car.contents.pair_ptr->cdr.type_tag = PAIR;
+    p->car.contents.pair_ptr->cdr.contents.pair_ptr = get_next_free_ptr();
+
+    read_dispatch(&p->car.contents.pair_ptr->cdr.contents.pair_ptr->car);
+
+    // This part is different though.
+    p->car.contents.pair_ptr->cdr.contents.pair_ptr->cdr.type_tag = PAIR;
+    return read_parens(&p->car.contents.pair_ptr->cdr.contents.pair_ptr->cdr);
+
+    // Relying on default initialization for empty list ending.
   } else {
     print_verbose("read_parens\n  %c at word buffer index %d\n", c, buffer_index);
 

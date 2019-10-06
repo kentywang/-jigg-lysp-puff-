@@ -38,7 +38,8 @@ Todos:
   instead on relying on uninitialized Elements to always be empty pairs, or
   would it?)
 - Can we convert the functions that take Element pointers into functions that
-  take Elements? (read)
+  take Elements? (read?) Maybe make it Pair pointers so it might be left-right
+  expression agnostic?
 - Make backend more C-like.
 - Make read robust against newlines, live stdin.
 - Protect against overly long input words.
@@ -56,8 +57,14 @@ Todos:
   string be kept in list-structured memory?
 - I'm not treating single-quotes in quotes literally; it's still converting
   them to a quote list. Not sure if this affects any behavior.
+- Add full list of primitives.
+- Does empty list work? (i.e. '())
 
 Overview of features added:
+- Verbose option for tracing evaluation (WIP)
+- Tail-optimized recursion (WIP)
+- Lambda expressions
+- Quotations
 - Converts single quotes in input into quote lists and does the opposite
   conversion on output.
 

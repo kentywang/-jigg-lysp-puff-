@@ -81,6 +81,10 @@ Element clone(const Element x)
   case NUMBER:
   // We copy the reference, which is what we want with non-atomic elements.
   case PAIR:
+  // Primitives procedures are stored by the address of their functions.
+  case PRIMITIVE_PROCEDURE:
+  // Compounds procedures are same as Pairs.
+  case COMPOUND_PROCEDURE:
     return x;
   // Since we store strings and symbol elements as pointers to manually
   // allocated memory, in order to truly copy them, we'll need to allocate
@@ -88,13 +92,7 @@ Element clone(const Element x)
   case SYMBOL:
     y.type_tag = x.type_tag;
     y.contents.symbol = string_alloc(strlen(x.contents.symbol));
-
     strcpy(y.contents.symbol, x.contents.symbol);
-
-    return y;
-  case PRIMITIVE_PROCEDURE:
-  case COMPOUND_PROCEDURE:
-    // TODO: Not yet implemented.
     return y;
   }
 }

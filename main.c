@@ -33,12 +33,17 @@ void read_eval_print_loop(void)
     // Read
     read_input(&exp);
 
+    // printf("READ:\n");
+    // print_element(exp);
+
     // Eval
     val = eval_dispatch(exp, env);
 
     // Print
     print_element(val);
-    printf("\n");
+
+    // printf("ENV:\n");
+    // print_element(env);
 
     // Free memory step?
   }

@@ -2,10 +2,18 @@
 #include <string.h>
 #include "lisp.h"
 
+void print_element(const Element);
+static void print_element_dispatch(const Element);
 static void print_pair(const Pair *);
 static void print_pair_contents(const Pair *);
 
 void print_element(const Element e)
+{
+  print_element_dispatch(e);
+  printf("\n");
+}
+
+void print_element_dispatch(const Element e)
 {
   switch (e.type_tag) {
   case PAIR:
@@ -48,11 +56,11 @@ void print_pair(const Pair *p)
 
 void print_pair_contents(const Pair *p)
 {
-  print_element(p->car);
+  print_element_dispatch(p->car);
 
   if (p->cdr.type_tag != PAIR) {
     printf(" . ");
-    print_element(p->cdr);
+    print_element_dispatch(p->cdr);
   } else if (p->cdr.contents.pair_ptr) {
     // If CDR is pair, we omit the dot.
     printf(" ");

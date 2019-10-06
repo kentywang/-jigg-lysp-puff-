@@ -6,35 +6,42 @@
 static Boolean self_evaluating(const Element);
 static Boolean variable(const Element);
 static Boolean application(const Element);
-static Boolean lambda(const Element);
-static Boolean quoted(const Element);
+static Boolean special_form(char *, const Element);
 
 static Element make_procedure(const Element, const Element);
 static Element apply(const Element, const Element);
 static Element list_of_values(const Element, const Element);
 static Element make_procedure(const Element, const Element);
 static Element apply_compound(const Element, Pair *);
+static Element eval_sequence(const Element, const Element);
+static Element eval_definition(const Element, const Element);
+static void define_variable(const Element, const Element, const Element);
+
 static Element procedure_parameters(const Element);
 static Element procedure_body(const Element);
 static Element procedure_environment(const Element);
-static Element eval_sequence(const Element, const Element);
 static Element text_of_quotation(const Element);
+static Element definition_variable(const Element);
+static Element definition_value(const Element);
 
 Element eval_dispatch(const Element exp, const Element env)
 {
+  // printf("EVAL:\n");
+  // print_element(exp);
+
   if (self_evaluating(exp))
     return exp;
   if (variable(exp))
     return lookup_variable_value(exp.contents.symbol, env);
-  if (quoted(exp))
+  if (special_form(QUOTE, exp))
     return text_of_quotation(exp);
   // if (assignment(exp))
   //   return eval_assignment(exp, env);
-  // if (definition(exp))
-  //   return eval_definition(exp, env);
+  if (special_form(DEFINE, exp))
+    return eval_definition(exp, env);
   // if (if_expression(exp))
   //   return eval_if(exp, env);
-  if (lambda(exp))
+  if (special_form(LAMBDA, exp))
     return make_procedure(exp, env);
   // if (cond(exp))
   //   return eval_dispatch(cond_to_if(exp), env);
@@ -68,26 +75,19 @@ Boolean application(const Element exp)
   return exp.type_tag == PAIR;
 }
 
-Boolean lambda(const Element exp)
+Boolean special_form(char *symbol, const Element exp)
 {
   return (
     exp.type_tag == PAIR &&
     car(exp).type_tag == SYMBOL &&
-    strcmp(car(exp).contents.symbol, "lambda") == 0
-  );
-}
-
-Boolean quoted(const Element exp)
-{
-  return (
-    exp.type_tag == PAIR &&
-    car(exp).type_tag == SYMBOL &&
-    strcmp(car(exp).contents.symbol, "quote") == 0
+    strcmp(car(exp).contents.symbol, symbol) == 0
   );
 }
 
 Element apply(const Element exp, const Element env)
 {
+  // Since these single-use abstractions are just aliases, let's just
+  // define them within this function.
   Element (*operator)(const Element) = &car;
   Element (*operands)(const Element) = &cdr;
 
@@ -170,11 +170,49 @@ Element eval_sequence(const Element exps, const Element env)
   return eval_dispatch(car(exps), env);
 }
 
+Element eval_definition(const Element exp, const Element env)
+{
+  define_variable(
+    definition_variable(exp),
+    eval_dispatch(definition_value(exp), env),
+    env
+  );
+
+  Element e = {
+    .type_tag = PAIR,
+    .contents.pair_ptr = NULL
+  };
+
+  // Return not important.
+  return e;
+}
+
+/*
+   f
+  /\
+ /\ \
+x 5 /\
+   /\ null
+  y 6
+*/
+void define_variable(
+  const Element var,
+  const Element val,
+  const Element env
+)
+{
+  // TODO: Add check to see if variable exists in first frame.
+  // If we had our own version of set-car!, we could use it here.
+  env.contents.pair_ptr->car = make_cons(
+    make_cons(var, val),
+    first_frame(env)
+  );
+}
+
 Element text_of_quotation(const Element exp)
 {
   return car(cdr(exp));
 }
-
 
 Element procedure_parameters(const Element exp)
 {
@@ -189,4 +227,14 @@ Element procedure_body(const Element exp)
 Element procedure_environment(const Element exp)
 {
   return cdr(cdr(exp));
+}
+
+Element definition_variable(const Element exp)
+{
+  return car(cdr(exp));
+}
+
+Element definition_value(const Element exp)
+{
+  return car(cdr(cdr(exp)));
 }
