@@ -99,7 +99,7 @@ char *read_word(const char prev_char)
 
   if (
     isspace(c) ||
-    c == '('   ||
+    c == '(' ||
     c == ')'
   ) {
     print_verbose("read_word\n found ending condition\n");
@@ -152,10 +152,6 @@ void read_parens(Element *e)
     p->car.contents.pair_ptr->cdr.contents.pair_ptr = get_next_free_ptr();
 
     read_dispatch(&p->car.contents.pair_ptr->cdr.contents.pair_ptr->car);
-
-    // This part is different though.
-    p->car.contents.pair_ptr->cdr.contents.pair_ptr->cdr.type_tag = PAIR;
-    return read_parens(&p->car.contents.pair_ptr->cdr.contents.pair_ptr->cdr);
 
     // Relying on default initialization for empty list ending.
   } else {

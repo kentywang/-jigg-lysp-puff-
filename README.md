@@ -65,8 +65,6 @@ Todos:
 - Add full list of primitives.
 - Does empty list work? (i.e. '())
 - Support reading boolean.
-- Two quotes in a row like in (if (= 1 1) 'yes 'no) or (list 'oh 'wow) is
-  not working properly.
 
 Overview of features added:
 - Verbose option for tracing evaluation (WIP)
