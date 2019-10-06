@@ -5,9 +5,12 @@
 #include "lisp.h"
 
 #define BUFFER_SIZE 100
+#define QUOTE_LENGTH 5 // The length of the word "quote"
 #define print_verbose verbosity && printf
 
+static void read_dispatch(Element *);
 static char *read_word(const char);
+static char *read_quote(const char);
 static void read_parens(Element *);
 static char *create_symbol(void);
 static char getch(void);
@@ -20,25 +23,29 @@ static int buffer_index = 0;
 // For get/ungetch.
 static char char_buffer;
 
-static Boolean verbosity;
-
-void read_input(Element *e, const Boolean use_verbose)
+void read_input(Element *e)
 {
-  verbosity = use_verbose;
-  int c;
+  char c;
 
   // Skip over leading whitespace.
   while (isspace(c = getch()))
     print_verbose("read_input\n  space\n");
 
-  // At start here, c is non-space char.
+  ungetch(c);
+
+  // At start here, next char is non-space.
+  read_dispatch(e);
+}
+
+void read_dispatch(Element *e)
+{
+  char c = getch();
+
   if (c == '(') {
-    print_verbose("read_input\n  (\n");
+    print_verbose("read_dispatch\n  (\n");
 
     e->type_tag = PAIR;
-    read_parens(e);
-
-    return;
+    return read_parens(e);
   }
   if (
     isalnum(c) ||
@@ -48,7 +55,7 @@ void read_input(Element *e, const Boolean use_verbose)
     c == '/' ||
     c == '-'
   ) {
-    print_verbose("read_input\n  %c at word buffer index %d\n", c, buffer_index);
+    print_verbose("read_dispatch\n  %c at word buffer index %d\n", c, buffer_index);
 
     char *s = read_word(c);
 
@@ -63,6 +70,23 @@ void read_input(Element *e, const Boolean use_verbose)
     return;
   }
 
+  // Convert single-quotes into a list beginning with "quote".
+  if (c == '\'') {
+    e->type_tag = PAIR;
+    e->contents.pair_ptr = get_next_free_ptr();
+
+    e->contents.pair_ptr->car.type_tag = SYMBOL;
+    e->contents.pair_ptr->car.contents.symbol = string_alloc(QUOTE_LENGTH);
+    strcpy(e->contents.pair_ptr->car.contents.symbol, "quote");
+
+    e->contents.pair_ptr->cdr.type_tag = PAIR;
+    e->contents.pair_ptr->cdr.contents.pair_ptr = get_next_free_ptr();
+
+    return read_dispatch(&e->contents.pair_ptr->cdr.contents.pair_ptr->car);
+
+    // Relying on default initialization for empty list ending.
+  }
+
   // Everything else.
   fprintf(stderr, "Bad identifier: %c\n", c);
   exit(BAD_IDENTIFIER);
@@ -72,7 +96,7 @@ char *read_word(const char prev_char)
 {
   word_buffer[buffer_index++] = prev_char;
 
-  int c = getch();
+  char c = getch();
 
   if (
     isspace(c) ||
@@ -92,10 +116,15 @@ char *read_word(const char prev_char)
   return read_word(c);
 }
 
+// char *read_quote(const char)
+// {
+
+// }
+
 void read_parens(Element *e)
 {
   print_verbose("read_parens\n  starting...\n");
-  int c;
+  char c;
 
   // Skip over leading whitespace. This will also keep reading after newline
   // if we're still within a parens.
@@ -146,7 +175,7 @@ char *create_symbol()
   // Reserve memory size for word.
   char *s = string_alloc(buffer_index);
 
-  // Copy over word from stdin to free pair's car.
+  // Copy over word from stdin buffer to free pair's car.
   strncpy(s, word_buffer, buffer_index);
 
   // Will this handle empty strings?

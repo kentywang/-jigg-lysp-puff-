@@ -59,9 +59,10 @@ struct binding {
 };
 
 /* main.c */
+extern Boolean verbosity;
 
 /* read.c */
-extern void read_input(Element *, const Boolean);
+extern void read_input(Element *);
 
 /* eval.c */
 extern Element eval_dispatch(const Element, const Element);

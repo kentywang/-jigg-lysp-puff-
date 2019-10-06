@@ -49,6 +49,13 @@ Todos:
 - Implement manual tail recursion.
 - GC!
 - Writeup architecture readme.
+- I waiver between relying on default initialization for Elements and
+  explicitly setting the values. Choose one. (Also, we might not be able to
+  rely on uninitialized values being what we expect on automatic variables.)
+- Am I not storing pairs for strings? Makes sense, right, because how would a
+  string be kept in list-structured memory?
+- I'm not treating single-quotes in quotes literally; it's still converting
+  them to a quote list. Not sure if this affects any behavior.
 
 Lessons learned:
 - For mutating an object's pointer member, I can't pass the pointer into
