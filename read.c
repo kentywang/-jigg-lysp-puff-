@@ -74,6 +74,12 @@ void read_dispatch(Element *e)
     e->type_tag = PAIR;
     e->contents.pair_ptr = get_next_free_ptr();
 
+    // Save pointer to root of input AST for GC purposes.
+    if (!input_ptr) {
+      input_ptr = e->contents.pair_ptr;
+      save(input_ptr);
+    }
+
     e->contents.pair_ptr->car.type_tag = SYMBOL;
     e->contents.pair_ptr->car.contents.symbol = string_alloc(QUOTE_LENGTH);
     strcpy(e->contents.pair_ptr->car.contents.symbol, QUOTE);

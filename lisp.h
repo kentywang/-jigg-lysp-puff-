@@ -70,6 +70,7 @@ struct binding {
 
 /* main.c */
 extern Boolean verbosity;
+extern Pair *input_ptr;
 
 /* read.c */
 extern void read_input(Element *);
@@ -80,7 +81,11 @@ extern Element eval_dispatch(const Element, const Element);
 /* print.c */
 extern void print_element(const Element);
 
-/* memory.c */
+/* stack.c */
+extern void save(Pair *);
+extern void forget(void);
+
+/* heap.c */
 extern Pair *get_next_free_ptr(void);
 extern char *string_alloc(int);
 

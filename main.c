@@ -29,6 +29,8 @@ void read_eval_print_loop(void)
   Element val;
   Element env = setup_environment();
 
+  save(env.contents.pair_ptr); // Global env should never be GCed.
+
   while (TRUE) {
     // Read
     read_input(&exp);
@@ -47,4 +49,6 @@ void read_eval_print_loop(void)
 
     // Free memory step?
   }
+
+  forget(); // Release global env from memory (not strictly needed here).
 }

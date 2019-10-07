@@ -87,13 +87,35 @@ Boolean special_form(char *symbol, const Element exp)
 
 Element apply(const Element exp, const Element env)
 {
+  Element procedure;
+  Pair *arguments;
+  Element e = {
+    .type_tag = PAIR,
+    .contents.pair_ptr = NULL
+  };
+
   // Since these single-use abstractions are just aliases, let's just
   // define them within this function.
   Element (*operator)(const Element) = &car;
   Element (*operands)(const Element) = &cdr;
 
-  Element procedure = eval_dispatch((*operator)(exp), env);
-  Pair *arguments = list_of_values((*operands)(exp), env).contents.pair_ptr;
+  // If this was the top level application from input, then we release the
+  // input AST from memory since we don't need it from this point forward.
+  // Otherwise, we're releasing a dummy pointer.
+  // We could move the release to after apply is done, so I wouldn't need
+  // the dummies on the stack, but I want to verify that my logic is sound.
+  if (input_ptr) {
+    // Clear so that we don't release again on recursive eval calls.
+    input_ptr = NULL;
+
+    procedure = eval_dispatch((*operator)(exp), env);
+    arguments = list_of_values((*operands)(exp), env).contents.pair_ptr;
+
+    forget();
+  } else {
+    procedure = eval_dispatch((*operator)(exp), env);
+    arguments = list_of_values((*operands)(exp), env).contents.pair_ptr;
+  }
 
   if (procedure.type_tag == PRIMITIVE_PROCEDURE)
     // Does this allow null args?
