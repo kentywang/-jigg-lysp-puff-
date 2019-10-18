@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include "lisp.h"
 
-#define HEAP_SIZE 1000
+#define MEMORYLIMIT 1000
 
-static Pair memory1[HEAP_SIZE], memory2[HEAP_SIZE];
+static Pair memory1[MEMORYLIMIT], memory2[MEMORYLIMIT];
 static Pair *free_ptr = memory1;
 
 // For GC, need to load pointers to Elements in all registers into the
@@ -23,7 +23,7 @@ Pair *get_next_free_ptr(void)
 {
   Pair *p = free_ptr;
 
-  if (free_ptr + 1 < memory1 + HEAP_SIZE) {
+  if (free_ptr + 1 < memory1 + MEMORYLIMIT) {
     free_ptr += 1;
     return p;
   }

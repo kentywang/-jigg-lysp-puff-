@@ -13,7 +13,7 @@ never build up if tail recursion is implemented properly, it doesn't make sense 
 
 I think we should use the agnostic Element type more than the Pair pointer.
 
-### Questions
+Questions:
 - How do you differentiate between newlines (ignored) and the enter key?
   A: Don't think you can, you need to listen to keyboard's shift.
 - Do we need to manually set CDR to null because of GC?
@@ -21,7 +21,7 @@ I think we should use the agnostic Element type more than the Pair pointer.
   a va_list for primitive functions to apply?
 - Will staticall-declared functions be accessible from the outside?
 
-### Tests
+Tests:
   (1(  2  3  )4)
    (1 2 3)
     (1 2 (3 4 (5)) 6 7)
@@ -33,15 +33,8 @@ apple
     (if (= n 1)
         1
         (* (fact (+ n -1)) n))))
-(define cons
-  (lambda (x y)
-    (lambda (m) (m x y))))
 
-(define car
-  (lambda (z)
-    (z (lambda (p q) p))))
-
-### Todos
+Todos:
 - Devise method of unit testing.
 - Remove unneeded wrapping of Pair pointers with an Element, since they're
   initialized with PAIR type tags already. (GC might complicate this, we'll
@@ -72,27 +65,8 @@ apple
 - Add full list of primitives.
 - Does empty list work? (i.e. '())
 - Support reading boolean.
-- Use Pair pointers for places where we need roots?
-- Add logging for stack pointer.
-- Store symbols/strings only once.
-- Add option to trigger GC on every REPL cycle.
-- Does my approach GC the input AST if we have a non-procedure application
-  pair?
 
-### Garbage Collection
-There's 5 classes of data on the heap with varying lifespans:
-- global environment (persistent)
-- input AST (from creation on read until after evaluating all its
-  subexpressions)
-- evaluated arguments (from creation within eval/apply until after env is
-  extended by a frame with them)
-- extended environment (from creation within eval/apply until after apply is
-  finished and we return the value to the calling function)
-- pairs created from primitive procedure calls (e.g. cons, list) (from
-  creation anywhere within eval/apply to end of REPL cycle)
-
-
-### Overview of features added:
+Overview of features added:
 - Verbose option for tracing evaluation (WIP)
 - Tail-optimized recursion (WIP)
 - Lambda expressions
@@ -102,7 +76,7 @@ There's 5 classes of data on the heap with varying lifespans:
 - Definitions
 - Conditional expression and booleans.
 
-### Lessons learned
+Lessons learned:
 - For mutating an object's pointer member, I can't pass the pointer into
   a function; I must pass the object.
 - fseek and fgets don't work with live stdin (as opposed to from a text file).
