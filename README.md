@@ -1,5 +1,14 @@
 ## (jigg lisp puff)
 
+ Compiling:
+```
+clang data.c env.c eval.c main.c primitive.c print.c read.c storage.c util.c
+```
+Running:
+```
+./a.out
+```
+
 A Scheme interpreter in C developed for exercise 5.51 of SICP.
 
 My approach will be to garbage collect on a fixed region of memory for
@@ -22,17 +31,31 @@ Questions:
 - Will staticall-declared functions be accessible from the outside?
 
 Tests:
+```
   (1(  2  3  )4)
+```
+```
    (1 2 3)
+```
+```
     (1 2 (3 4 (5)) 6 7)
+```
+```
     (1(  -2  3a  )4)
+```
+```
 apple
+```
+```
    apple
+```
+```
 (define fact
   (lambda (n)
     (if (= n 1)
         1
         (* (fact (+ n -1)) n))))
+```
 
 Todos:
 - Devise method of unit testing.
