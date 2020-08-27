@@ -84,6 +84,9 @@ apple
   breaking their behavior within interpretation?
 - Implement manual tail recursion.
 - GC!
+  - Use case from SICP where two lists are produced to generate a number to
+    write a test:
+    ```(accumulate + 0 (filter odd? (enumerate-interval 0 n)))```
 - Writeup architecture readme.
 - I waiver between relying on default initialization for Elements and
   explicitly setting the values. Choose one. (Also, we might not be able to
