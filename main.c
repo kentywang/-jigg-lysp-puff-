@@ -31,6 +31,7 @@ void read_eval_print_loop(void)
 
   while (TRUE) {
     // Read
+    printf("λ 〉");
     read_input(&exp);
 
     // printf("READ:\n");
