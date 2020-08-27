@@ -22,7 +22,7 @@ never build up if tail recursion is implemented properly, it doesn't make sense 
 
 I think we should use the agnostic Element type more than the Pair pointer.
 
-Questions:
+### Questions
 - How do you differentiate between newlines (ignored) and the enter key?
   A: Don't think you can, you need to listen to keyboard's shift.
 - Do we need to manually set CDR to null because of GC?
@@ -30,7 +30,8 @@ Questions:
   a va_list for primitive functions to apply?
 - Will staticall-declared functions be accessible from the outside?
 
-Tests:
+### Tests
+These should be in them:
 ```
   (1(  2  3  )4)
 ```
@@ -56,8 +57,14 @@ apple
         1
         (* (fact (+ n -1)) n))))
 ```
+```
+(define cons (lambda (x y) (lambda (m) (m x y))))
+```
+```
+(define car (lambda (z) (z (lambda (p q) p))))
+```
 
-Todos:
+### Todos
 - Devise method of unit testing.
 - Remove unneeded wrapping of Pair pointers with an Element, since they're
   initialized with PAIR type tags already. (GC might complicate this, we'll
@@ -89,7 +96,7 @@ Todos:
 - Does empty list work? (i.e. '())
 - Support reading boolean.
 
-Overview of features added:
+### Overview of features added
 - Verbose option for tracing evaluation (WIP)
 - Tail-optimized recursion (WIP)
 - Lambda expressions
@@ -99,10 +106,12 @@ Overview of features added:
 - Definitions
 - Conditional expression and booleans.
 
-Lessons learned:
+### Lessons learned
 - For mutating an object's pointer member, I can't pass the pointer into
   a function; I must pass the object.
 - fseek and fgets don't work with live stdin (as opposed to from a text file).
   For fgets, the program waits until we have _new_ input before getting.
 - () and [] has higher precedence than ++ and *, despite some online sources
   stating otherwise.
+- Going back to a codebase after almost a year in a language that you spent
+  around 3 weeks learning is terrifying.
