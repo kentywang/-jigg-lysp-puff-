@@ -27,6 +27,12 @@ Binding initial_frame[] = {
     }
   },
   {
+    "cons", {
+      .type_tag = PRIMITIVE_PROCEDURE,
+      .contents.func_ptr = &make_cons // TODO: Why is this broken?
+    }
+  },
+  {
     "list", {
       .type_tag = PRIMITIVE_PROCEDURE,
       .contents.func_ptr = &make_list

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "lisp.h"
 
-#define MEMORYLIMIT 100
+#define MEMORYLIMIT 1000
 
 static Pair memory1[MEMORYLIMIT], memory2[MEMORYLIMIT];
 static Pair *free_ptr = memory1;

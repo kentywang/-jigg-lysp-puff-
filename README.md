@@ -87,6 +87,18 @@ apple
   - Use case from SICP where two lists are produced to generate a number to
     write a test:
     ```(accumulate + 0 (filter odd? (enumerate-interval 0 n)))```
+  - Get primitive `cons` working so I can run:
+    ```
+    (define enum-interval
+      (lambda (start end)
+        (if (= start end)
+            (list start)
+            (cons start
+                  (enum-interval (+ 1 start)
+                                 end)))))
+
+    (enum-interval 1 3)
+    ```
 - Writeup architecture readme.
 - I waiver between relying on default initialization for Elements and
   explicitly setting the values. Choose one. (Also, we might not be able to
@@ -98,6 +110,7 @@ apple
 - Add full list of primitives.
 - Does empty list work? (i.e. '())
 - Support reading boolean.
+- Make a list of the built-in functions.
 
 ### Overview of features added
 - Verbose option for tracing evaluation (WIP)
