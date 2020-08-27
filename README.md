@@ -33,22 +33,22 @@ I think we should use the agnostic Element type more than the Pair pointer.
 ### Tests
 These should be in them:
 ```
-  (1(  2  3  )4)
+  '(1(  2  3  )4)
 ```
 ```
-   (1 2 3)
+   '(1 2 3)
 ```
 ```
-    (1 2 (3 4 (5)) 6 7)
+    '(1 2 (3 4 (5)) 6 7)
 ```
 ```
-    (1(  -2  3a  )4)
+    '(1(  -2  3a  )4)
 ```
 ```
-apple
+'apple
 ```
 ```
-   apple
+   'apple
 ```
 ```
 (define fact
