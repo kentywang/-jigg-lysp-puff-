@@ -18,9 +18,19 @@ in lists eventually.
 
 Should we want to explicitly control call stacks, we can either store the
 stack within or as a separate structure from the GCed heap. Since stacks
-never build up if tail recursion is implemented properly, it doesn't make sense to keep it with other data that does need to be garbage collected.
+never build up if tail recursion is implemented properly, it doesn't make
+sense to keep it with other data that does need to be garbage collected.
 
 I think we should use the agnostic Element type more than the Pair pointer.
+
+### Overview of features added
+- Verbose option for tracing evaluation (WIP)
+- Lambda expressions
+- Quotations
+- Converts single quotes in input into quote lists and does the opposite
+  conversion on output.
+- Definitions
+- Conditional expression and booleans.
 
 ### Questions
 - How do you differentiate between newlines (ignored) and the enter key?
@@ -105,6 +115,9 @@ For tail-call recursion testing:
 
     (enum-interval 1 3)
     ```
+  - I believe we'll need to either implement GC in our "virtual" heap and
+    stack (including registers?), or implement GC for C. The latter will be
+    very similar to the building explicit-control evaluator in SICP.
 - Writeup architecture readme.
 - I waiver between relying on default initialization for Elements and
   explicitly setting the values. Choose one. (Also, we might not be able to
@@ -117,16 +130,7 @@ For tail-call recursion testing:
 - Does empty list work? (i.e. '())
 - Support reading boolean.
 - Make a list of the built-in functions.
-
-### Overview of features added
-- Verbose option for tracing evaluation (WIP)
-- Tail-optimized recursion (WIP)
-- Lambda expressions
-- Quotations
-- Converts single quotes in input into quote lists and does the opposite
-  conversion on output.
-- Definitions
-- Conditional expression and booleans.
+- Tail-optimized recursion
 
 ### Lessons learned
 - For mutating an object's pointer member, I can't pass the pointer into

@@ -157,9 +157,9 @@ Element apply_compound(const Element procedure, Pair *arguments)
   );
 }
 
-// The compiler may perform tail-call optimization here. But we should
-// rework evaluation into a giant while loop with a stack to explicitly
-// control it.
+// The compiler may or may not perform tail-call optimization here. But we
+// should rework evaluation into a giant while loop with a stack to
+// explicitly control it.
 Element eval_sequence(const Element exps, const Element env)
 {
   // Are there more expressions after the head?
