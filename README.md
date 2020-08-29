@@ -121,7 +121,10 @@ For tail-call recursion testing:
   - I believe my interpreter can have the illusion of infinite memory in
     two ways: I can implement GC in our "virtual" heap and stack (including
     registers?), or implement GC for C. The former will be very similar to
-    the building explicit-control evaluator in SICP.
+    building the explicit-control evaluator in SICP. The latter might mean we
+    don't need the "virtual" heap and stack anymore (since it's Lisp-
+    specific). The latter is definitely harder; I'm not sure how a GC in C
+    could recognize what's deletable and what isn't in the Lisp layer.
 - Writeup architecture readme.
 - I waiver between relying on default initialization for Elements and
   explicitly setting the values. Choose one. (Also, we might not be able to
