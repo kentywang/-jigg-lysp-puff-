@@ -7,7 +7,9 @@
 static Element add(const Pair *);
 static Element multiply(const Pair *);
 static Element equals(const Pair *);
-static Element make_cons_from_pair(const Pair *);
+static Element primitive_make_cons(const Pair *);
+static Element primitive_car(const Pair *);
+static Element primitive_cdr(const Pair *);
 static Element make_list(const Pair *);
 
 Binding initial_frame[] = {
@@ -32,7 +34,19 @@ Binding initial_frame[] = {
   {
     "cons", {
       .type_tag = PRIMITIVE_PROCEDURE,
-      .contents.func_ptr = &make_cons_from_pair
+      .contents.func_ptr = &primitive_make_cons
+    }
+  },
+  {
+    "car", {
+      .type_tag = PRIMITIVE_PROCEDURE,
+      .contents.func_ptr = &primitive_car
+    }
+  },
+  {
+    "cdr", {
+      .type_tag = PRIMITIVE_PROCEDURE,
+      .contents.func_ptr = &primitive_cdr
     }
   },
   {
@@ -103,7 +117,7 @@ Element equals(const Pair *p)
 
 // This is different from the make_cons function that is used internally.
 // TODO: Can we just use one function for both purposes?
-Element make_cons_from_pair(const Pair *p)
+Element primitive_make_cons(const Pair *p)
 {
   if (
     // If only one argument...
@@ -123,6 +137,23 @@ Element make_cons_from_pair(const Pair *p)
   }
 
   return make_cons(p->car, p->cdr.contents.pair_ptr->car);
+}
+
+/*
+How a pair (1 . 2) looks like:
+    p
+   / \
+  /\  null
+ 1  2
+*/
+Element primitive_car(const Pair *p)
+{
+  return p->car.contents.pair_ptr->car;
+}
+
+Element primitive_cdr(const Pair *p)
+{
+  return p->car.contents.pair_ptr->cdr;
 }
 
 /*
