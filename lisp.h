@@ -85,7 +85,6 @@ extern Pair *get_next_free_ptr(void);
 extern char *string_alloc(int);
 
 /* data.c */
-extern Element make_list(const Pair *);
 extern Element make_cons(const Element, const Element);
 extern Element car(const Element);
 extern Element cdr(const Element);
@@ -103,7 +102,6 @@ extern Boolean is_empty_environment(const Element);
 
 /* primitive.c */
 extern Binding initial_frame[];
-extern Element load_frame(const Binding *);
 
 /* util.c */
 extern Boolean is_integer(char *);

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include "lisp.h"
 
@@ -6,6 +7,8 @@
 static Element add(const Pair *);
 static Element multiply(const Pair *);
 static Element equals(const Pair *);
+static Element make_cons_from_pair(const Pair *);
+static Element make_list(const Pair *);
 
 Binding initial_frame[] = {
   {
@@ -29,7 +32,7 @@ Binding initial_frame[] = {
   {
     "cons", {
       .type_tag = PRIMITIVE_PROCEDURE,
-      .contents.func_ptr = &make_cons // TODO: Why is this broken?
+      .contents.func_ptr = &make_cons_from_pair
     }
   },
   {
@@ -39,65 +42,15 @@ Binding initial_frame[] = {
     }
   },
   {
-    "x", {
-      .type_tag = NUMBER,
-      .contents.number = 322
+    "nil", {
+      .type_tag = PAIR,
+      .contents.pair_ptr = NULL
     }
   },
   {
     END_OF_BINDINGS // Sentinel value.
   }
 };
-
-/*
-We'll be generating two pairs at a time, one pair as the backbone of the
-list, and the other as the actual variable-and-value pair.
-  p
- /\
-2 /\
- 5 /\
-  8  null
-*/
-Element load_frame(const Binding *b)
-{
-  Element frame_head = {
-    .type_tag = PAIR,
-    .contents.pair_ptr = NULL
-  };
-
-  // We need to handle the first element a bit differently since we set the
-  // return element to point to the first backbone.
-  if (b->variable) {
-    Pair *curr_backbone = get_next_free_ptr();
-    Pair *p = get_next_free_ptr();
-
-    frame_head.contents.pair_ptr = curr_backbone;
-
-    p->car.type_tag = SYMBOL;
-    // We could also copy the string into GCed memory.
-    p->car.contents.symbol = b->variable;
-    p->cdr = b->value;
-
-    // Wrapping Pair pointer in Element is optional, since the default
-    // initialization gives it the PAIR type tag.
-    curr_backbone->car.contents.pair_ptr = p;
-
-    // Similar to above.
-    while ((++b)->variable) { // Stop when we encounter END_OF_BINDINGS.
-      curr_backbone->cdr.contents.pair_ptr = get_next_free_ptr();
-      curr_backbone = curr_backbone->cdr.contents.pair_ptr;
-
-      p = get_next_free_ptr();
-      p->car.type_tag = SYMBOL;
-      p->car.contents.symbol = b->variable;
-      p->cdr = b->value;
-
-      curr_backbone->car.contents.pair_ptr = p;
-    }
-  }
-
-  return frame_head;
-}
 
 Element add(const Pair *p)
 {
@@ -146,4 +99,69 @@ Element equals(const Pair *p)
     e.contents.truth = TRUE;
 
   return e;
+}
+
+// This is different from the make_cons function that is used internally.
+// TODO: Can we just use one function for both purposes?
+Element make_cons_from_pair(const Pair *p)
+{
+  if (
+    // If only one argument...
+    (
+      p->cdr.type_tag == PAIR &&
+      !p->cdr.contents.pair_ptr
+    ) ||
+    // Or if more than two arguments...
+    (
+      p->cdr.type_tag == PAIR &&
+      p->cdr.contents.pair_ptr->cdr.type_tag == PAIR &&
+      p->cdr.contents.pair_ptr->cdr.contents.pair_ptr
+    )
+  ) {
+    fprintf(stderr, "Arity mismatch.\n");
+    exit(ARITY_MISMATCH);
+  }
+
+  return make_cons(p->car, p->cdr.contents.pair_ptr->car);
+}
+
+/*
+I think we want to treat the parsed input as a regular AST.
+
+  p
+ /\
+2 /\
+ 5 /\
+  8  null
+
+Since arguments are already in a list, let's make use of them when
+applying primitive procedures.
+
+Note this is essentially call-by-reference since the argument list points
+to an existing list in memory (We do this to allow for easy passing of
+variable argument lengths to functions). But we musn't mutate the arg.
+
+C doesn't allow variable-argument functions to be called with no arguments,
+but I don't see a use case for it here, so I'm won't try adding support
+for it.
+
+We use Pair arg type because this is a purely internal-usage function
+that we can guarantee is always a proper list.
+
+Even if it's just one element like (list 1), the arg list will be (1) and
+thus always has a car and cdr.
+*/
+Element make_list(const Pair *p)
+{
+  if (p->cdr.type_tag == PAIR && !p->cdr.contents.pair_ptr) {
+    Element e = {
+      .type_tag = PAIR,
+      .contents.pair_ptr = NULL
+    };
+
+    // Any empty list is interchangeable with another.
+    return make_cons(p->car, e);
+  }
+
+  return make_cons(p->car, make_list(p->cdr.contents.pair_ptr));
 }

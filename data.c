@@ -26,8 +26,6 @@ Element make_cons(const Element x, const Element y)
   return e;
 }
 
-// We should write a list argument version of make_cons. 
-
 /*
 I think we want to treat the parsed input as a regular AST.
 

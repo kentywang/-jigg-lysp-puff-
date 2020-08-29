@@ -20,7 +20,7 @@ void print_element_dispatch(const Element e)
     if (e.contents.pair_ptr)
       print_pair(e.contents.pair_ptr);
     else
-      printf("nil");
+      printf("()");
     break;
   case NUMBER:
     printf("%d", e.contents.number);
