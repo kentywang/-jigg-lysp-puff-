@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include "lisp.h"
 
-#define MEMORYLIMIT 1000
+#define HEAP_LIMIT 1000
 
-static Pair memory1[MEMORYLIMIT], memory2[MEMORYLIMIT];
-static Pair *free_ptr = memory1;
-static Boolean on_memory1 = TRUE;
+static Pair heap1[HEAP_LIMIT], heap2[HEAP_LIMIT];
+static Pair *free_ptr = heap1;
+static Boolean on_heap1 = TRUE;
 
 // For GC, need to load pointers to Elements in all registers into the
 // working memory in a list structure that will be traversed.
@@ -24,23 +24,23 @@ Pair *get_next_free_ptr(void)
 {
   Pair *p = free_ptr;
 
-  if (on_memory1) {
-    if (free_ptr + 1 < memory1 + MEMORYLIMIT) {
+  if (on_heap1) {
+    if (free_ptr + 1 < heap1 + HEAP_LIMIT) {
       free_ptr += 1;
-      printf("Space left: %ld\n", memory1 + MEMORYLIMIT - free_ptr);
+      printf("Space left: %ld\n", heap1 + HEAP_LIMIT - free_ptr);
     } else {
-      free_ptr = memory2;
-      on_memory1 = FALSE;
+      free_ptr = heap2;
+      on_heap1 = FALSE;
 
       // GC here.
     }
   } else {
-    if (free_ptr + 1 < memory2 + MEMORYLIMIT) {
+    if (free_ptr + 1 < heap2 + HEAP_LIMIT) {
       free_ptr += 1;
-      printf("Space left: %ld\n", memory2 + MEMORYLIMIT - free_ptr);
+      printf("Space left: %ld\n", heap2 + HEAP_LIMIT - free_ptr);
     } else {
-      free_ptr = memory1;
-      on_memory1 = TRUE;
+      free_ptr = heap1;
+      on_heap1 = TRUE;
 
       // GC here.
     }

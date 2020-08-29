@@ -2,7 +2,7 @@
 
  Compiling:
 ```
-clang data.c env.c eval.c main.c primitive.c print.c read.c storage.c util.c
+clang data.c env.c eval.c main.c primitive.c print.c read.c stack.c heap.c util.c
 ```
 Running:
 ```
