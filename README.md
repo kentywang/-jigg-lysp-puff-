@@ -63,6 +63,12 @@ These should be in them:
 ```
 (define car (lambda (z) (z (lambda (p q) p))))
 ```
+For tail-call recursion testing:
+```
+(define y (lambda (x) (if (= x 10) 'woof (y (+ x 1)))))
+
+(y 1)
+```
 
 ### Todos
 - Devise method of unit testing.

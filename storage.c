@@ -6,6 +6,7 @@
 
 static Pair memory1[MEMORYLIMIT], memory2[MEMORYLIMIT];
 static Pair *free_ptr = memory1;
+static Boolean on_memory1 = TRUE;
 
 // For GC, need to load pointers to Elements in all registers into the
 // working memory in a list structure that will be traversed.
@@ -23,12 +24,27 @@ Pair *get_next_free_ptr(void)
 {
   Pair *p = free_ptr;
 
-  if (free_ptr + 1 < memory1 + MEMORYLIMIT) {
-    free_ptr += 1;
-    return p;
+  if (on_memory1) {
+    if (free_ptr + 1 < memory1 + MEMORYLIMIT) {
+      free_ptr += 1;
+      printf("Space left: %ld\n", memory1 + MEMORYLIMIT - free_ptr);
+    } else {
+      free_ptr = memory2;
+      on_memory1 = FALSE;
+
+      // GC here.
+    }
+  } else {
+    if (free_ptr + 1 < memory2 + MEMORYLIMIT) {
+      free_ptr += 1;
+      printf("Space left: %ld\n", memory2 + MEMORYLIMIT - free_ptr);
+    } else {
+      free_ptr = memory1;
+      on_memory1 = TRUE;
+
+      // GC here.
+    }
   }
 
-  // WIP, need to implement garbage collection.
-  printf("Uh-oh.\n");
   return p;
 }
