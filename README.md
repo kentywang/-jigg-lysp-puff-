@@ -73,6 +73,9 @@ These should be in them:
 ```
 (define car (lambda (z) (z (lambda (p q) p))))
 ```
+```
+((lambda (x) (x x)) (lambda (x) (x x)))
+```
 For tail-call recursion testing:
 ```
 (define y (lambda (x) (if (= x 10) 'woof (y (+ x 1)))))
@@ -115,9 +118,10 @@ For tail-call recursion testing:
 
     (enum-interval 1 3)
     ```
-  - I believe we'll need to either implement GC in our "virtual" heap and
-    stack (including registers?), or implement GC for C. The latter will be
-    very similar to the building explicit-control evaluator in SICP.
+  - I believe my interpreter can have the illusion of infinite memory in
+    two ways: I can implement GC in our "virtual" heap and stack (including
+    registers?), or implement GC for C. The former will be very similar to
+    the building explicit-control evaluator in SICP.
 - Writeup architecture readme.
 - I waiver between relying on default initialization for Elements and
   explicitly setting the values. Choose one. (Also, we might not be able to
