@@ -151,3 +151,8 @@ For tail-call recursion testing:
   stating otherwise.
 - Going back to a codebase after almost a year in a language that you spent
   around 3 weeks learning is terrifying.
+- After struggling with how to build the GC in my interpreter for a while, I
+  think I realize now that explicit control of GC and tail-call optimization
+  (as opposed to relying on the implementation language's own facilities for
+  those features) requires the modeling of their channels of control,
+  registers and stacks.
