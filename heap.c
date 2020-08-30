@@ -27,7 +27,7 @@ Pair *get_next_free_ptr(void)
   if (on_heap1) {
     if (free_ptr + 1 < heap1 + HEAP_LIMIT) {
       free_ptr += 1;
-      printf("Space left: %ld\n", heap1 + HEAP_LIMIT - free_ptr);
+      // printf("Space left: %ld\n", heap1 + HEAP_LIMIT - free_ptr);
     } else {
       free_ptr = heap2;
       on_heap1 = FALSE;
@@ -37,7 +37,7 @@ Pair *get_next_free_ptr(void)
   } else {
     if (free_ptr + 1 < heap2 + HEAP_LIMIT) {
       free_ptr += 1;
-      printf("Space left: %ld\n", heap2 + HEAP_LIMIT - free_ptr);
+      // printf("Space left: %ld\n", heap2 + HEAP_LIMIT - free_ptr);
     } else {
       free_ptr = heap1;
       on_heap1 = TRUE;
