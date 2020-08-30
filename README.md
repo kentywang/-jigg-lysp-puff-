@@ -140,6 +140,8 @@ For tail-call recursion testing:
 - Tail-optimized recursion
 
 ### Lessons learned
+- Creating a parser was quite a task on its own. Even for that alone I'm
+  proud of my work.
 - For mutating an object's pointer member, I can't pass the pointer into
   a function; I must pass the object.
 - fseek and fgets don't work with live stdin (as opposed to from a text file).
