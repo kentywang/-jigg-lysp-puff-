@@ -82,7 +82,20 @@ For tail-call recursion testing:
 
 (y 1)
 ```
+Doesn't work yet, need to figure out why:
+```
+λ 》((lambda (x) (x x)) +)
+45800720
 
+λ 》(((lambda (x) (x x))
+  (lambda (fact-gen)
+    (lambda (n)
+      (if (= 0 n)
+          1
+          (* n ((fact-gen fact-gen) (- n 1)))))))
+ 5)
+Not a procedure.
+```
 ### Todos
 - Devise method of unit testing.
 - Remove unneeded wrapping of Pair pointers with an Element, since they're
