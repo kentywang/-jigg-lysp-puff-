@@ -6,10 +6,9 @@ static Element clone(const Element);
 /*
 Should return Element for closure property.
 
-If the elements to cons are pairs, we want to the cons to hold their
-references so if their contents change, the cons does too. But if the
-elements are atoms (strings, symbols, numbers, boolean), we want a copy
-of them.
+If the elements to cons are pairs, we want the cons to hold their references
+so if their contents change, the cons does too. But if the elements are atoms
+(strings, symbols, numbers, boolean), we want a copy of them.
 */
 Element make_cons(const Element x, const Element y)
 {

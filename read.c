@@ -61,6 +61,9 @@ void read_dispatch(Element *e)
     if (is_integer(s)) {
       e->type_tag = NUMBER;
       e->contents.number = atoi(s);
+
+      // Release memory for symbol now that we've parsed it into a number.
+      free(s);
       return;
     }
 
@@ -164,6 +167,9 @@ void read_parens(Element *e)
       p->car.type_tag = NUMBER;
       p->car.contents.number = atoi(s);
       print_verbose("read_parens\n  %d was an int\n", p->car.contents.number);
+
+      // Release memory for symbol now that we've parsed it into a number.
+      free(s);
     } else {
       p->car.type_tag = SYMBOL;
       p->car.contents.symbol = s;
