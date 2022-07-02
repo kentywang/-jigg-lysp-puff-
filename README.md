@@ -82,7 +82,20 @@ For tail-call recursion testing:
 
 (y 1)
 ```
+Doesn't work yet, need to figure out why:
+```
+λ 》((lambda (x) (x x)) +)
+45800720
 
+λ 》(((lambda (x) (x x))
+  (lambda (fact-gen)
+    (lambda (n)
+      (if (= 0 n)
+          1
+          (* n ((fact-gen fact-gen) (- n 1)))))))
+ 5)
+Not a procedure.
+```
 ### Todos
 - Devise method of unit testing.
 - Remove unneeded wrapping of Pair pointers with an Element, since they're
@@ -139,6 +152,18 @@ For tail-call recursion testing:
 - Support reading boolean.
 - Make a list of the built-in functions.
 - Tail-optimized recursion
+- Why this returns `(. 2)` instead of `2`?
+```(cdr '(1 . 2))```
+- So I think for first pass, we don't need virtual stack. C's stack and C's
+  heap will support our Lisp layer's 2 heaps (which are statically
+  allocated C memory).
+- C's stack will obviously clean up after itself, but when GCing Lisp heap,
+  that's when we free symbol memory off C heap.
+- For values to mark during GC to keep, mark current stack of env frames,
+  along with current input (remember parsed input is also on Lisp heap) at
+  least until evaluation of the input fully finishes.
+- How will Lisp heap know what's the current env stack or current input? I
+  guess it needs to maintain two elements that the REPL instantiates for it.
 
 ### Lessons learned
 - Creating a parser was quite a task on its own. Even for that alone I'm
