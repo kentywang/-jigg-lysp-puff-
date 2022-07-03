@@ -2,7 +2,7 @@
 
  Compiling:
 ```
-clang data.c env.c eval.c main.c primitive.c print.c read.c stack.c heap.c util.c
+clang data.c memory.c env.c eval.c main.c primitive.c print.c read.c util.c
 ```
 Running:
 ```
@@ -120,17 +120,23 @@ Not a procedure.
     write a test:
     ```(accumulate + 0 (filter odd? (enumerate-interval 0 n)))```
   - Get primitive `cons` working so I can run:
-    ```
-    (define enum-interval
-      (lambda (start end)
-        (if (= start end)
-            (list start)
-            (cons start
-                  (enum-interval (+ 1 start)
-                                 end)))))
+```
+(define enum-interval
+  (lambda (start end)
+    (if (= start end)
+        (list start)
+        (cons start
+              (enum-interval (+ 1 start)
+                             end)))))
+(enum-interval 1 3)
+```
+  - Also try spamming `'1`, mix with other commands
+  - Make sure define_variable mutates global env. I suspect it doesn't.
+    - Actually, it's working fine since we're modifying the car.
+  - Maybe prob was when there was no stack, global env gets deleted.
+    - Yep! That was it.
+  - Still need to turn back on recursive cleaning. 
 
-    (enum-interval 1 3)
-    ```
   - I believe my interpreter can have the illusion of infinite memory in
     two ways: I can implement GC in our "virtual" heap and stack (including
     registers?), or implement GC for C. The former will probably mean
@@ -157,6 +163,7 @@ Not a procedure.
 - So I think for first pass, we don't need virtual stack. C's stack and C's
   heap will support our Lisp layer's 2 heaps (which are statically
   allocated C memory).
+  - Actually, I think we do need virtual stack for GC.
 - C's stack will obviously clean up after itself, but when GCing Lisp heap,
   that's when we free symbol memory off C heap.
 - For values to mark during GC to keep, mark current stack of env frames,
@@ -164,7 +171,23 @@ Not a procedure.
   least until evaluation of the input fully finishes.
 - How will Lisp heap know what's the current env stack or current input? I
   guess it needs to maintain two elements that the REPL instantiates for it.
-
+- I think we need to have a statically allocated array of pair addresses, not
+  pairs themselves (and so get_next_free_ptr returns an C heap address rather
+  than an address in the statically allocated pair array) because we don't
+  want to change the underlying addresses that Lisp uses for its data whenever
+  we GC. We just want to cull the addresses themselves, and have C free the
+  memory for the culled addresses.
+- Wait, can I recursively clean up (i.e. freeing) without accidentally
+  freeing necessary memory? I.e. deleting a used env stack will eventually
+  recurse to the global env, which means the global bindings get deleted. How
+  can I avoid this?
+- Not working (but `nil` does, why?):
+```
+()
+```
+  - Fixed. We need to evaluate `()` as a self-evaluating expression.
+- Now infinite loop when GCing, and also if delete symbol, corrupted data.
+  Why?
 ### Lessons learned
 - Creating a parser was quite a task on its own. Even for that alone I'm
   proud of my work.
@@ -181,3 +204,16 @@ Not a procedure.
   (as opposed to relying on the implementation language's own facilities for
   those features) requires the modeling of their channels of control,
   registers and stacks.
+- GC needs more than just current Lisp stack's environment as a root node. It
+  needs all stack environments as root nodes. This is cause the current stack
+  frame may have a partial environment, while the frame underneath has
+  another, different partial environment that also needs to be preserved so
+  that the full stack can return something.
+  - Example:
+```
+(define y (lambda (x) (+ x 1)))
+(define z (lambda (w) (+ w (y 30))))
+(z 10)
+```
+      While within the y call of the z call, w is nowhere in the env, but we
+      still need to remember w for the stack frame beneath.

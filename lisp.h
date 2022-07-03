@@ -22,6 +22,8 @@ enum error_codes {
   UNEXPECTED_ARG,
   NOT_PROCEDURE,
   ARITY_MISMATCH,
+  STACK_OVERFLOW,
+  HEAP_OVERFLOW
 };
 
 // Be explicit that false should be 0.
@@ -75,18 +77,20 @@ extern Boolean verbosity;
 extern void read_input(Element *);
 
 /* eval.c */
-extern Element eval_dispatch(const Element, const Element);
+extern Element eval_dispatch(const Element, Element);
 
 /* print.c */
 extern void print_element(const Element);
+extern void print_pair(const Pair *);
 
-/* stack.c */
-extern void save(Pair *);
-extern void forget(void);
-
-/* heap.c */
+/* memory.c */
+extern Element curr_exp;
+extern Element curr_val;
+extern Element global_env;
 extern Pair *get_next_free_ptr(void);
 extern char *string_alloc(int);
+extern void save(Pair *);
+extern void forget(void);
 
 /* data.c */
 extern Element make_cons(const Element, const Element);

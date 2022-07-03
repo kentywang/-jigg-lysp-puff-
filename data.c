@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 #include "lisp.h"
 
 static Element clone(const Element);
@@ -21,7 +22,13 @@ Element make_cons(const Element x, const Element y)
 
   e.type_tag = PAIR;
   e.contents.pair_ptr = p;
-
+  printf("Consed car: \n");
+  print_element(x);
+  printf("Consed cdr: \n");
+  print_element(y);
+  // printf("Consed pair: \n");
+  // print_pair(p);
+  printf("\n");
   return e;
 }
 
@@ -57,11 +64,18 @@ Element clone(const Element x)
 Element car(const Element x)
 {
   // Add check?
+  if (!x.contents.pair_ptr) {
+    printf("null pair ptr!\n");
+  }
   return x.contents.pair_ptr->car;
 }
 
 Element cdr(const Element x)
 {
+  // Add check?
+  if (!x.contents.pair_ptr) {
+    printf("null pair ptr!\n");
+  }
   return x.contents.pair_ptr->cdr;
 }
 

@@ -30,30 +30,70 @@ Element eval_dispatch(const Element exp, const Element env)
   // printf("EVAL:\n");
   // print_element(exp);
 
-  if (self_evaluating(exp))
-    return exp;
-  if (variable(exp))
-    return lookup_variable_value(exp.contents.symbol, env);
-  if (special_form(QUOTE, exp))
-    return text_of_quotation(exp);
-  // if (assignment(exp))
-  //   return eval_assignment(exp, env);
-  if (special_form(DEFINE, exp))
-    return eval_definition(exp, env);
-  if (special_form(IF, exp))
-    return eval_if(exp, env);
-  if (special_form(LAMBDA, exp))
-    return make_procedure(exp, env);
-  // if (cond(exp))
-  //   return eval_dispatch(cond_to_if(exp), env);
-  // if (and(exp))
-  //   return eval_and(exp, env);
-  // if (or(exp))
-  //   return eval_or(exp, env);
-  // if (let(exp))
-  //   return eval_dispatch(let_to_combination(exp), env);
-  if (application(exp))
-    return apply(exp, env);
+  save(env.contents.pair_ptr);
+
+  Element result;
+
+  if (self_evaluating(exp)) {
+    result = exp;
+    forget();
+    return result;
+  }
+  if (variable(exp)) {
+    result = lookup_variable_value(exp.contents.symbol, env);
+    forget();
+    return result;
+  }
+  if (special_form(QUOTE, exp)) {
+    result = text_of_quotation(exp);
+    forget();
+    return result;
+  }
+  // if (assignment(exp)) {
+  //   result = eval_assignment(exp, env);
+  //   forget();
+  //   return result;
+  // }
+  if (special_form(DEFINE, exp)) {
+    result = eval_definition(exp, env);
+    forget();
+    return result;
+  }
+  if (special_form(IF, exp)) {
+    result = eval_if(exp, env);
+    forget();
+    return result;
+  }
+  if (special_form(LAMBDA, exp)) {
+    result = make_procedure(exp, env);
+    forget();
+    return result;
+  }
+  // if (cond(exp)) {
+  //   result = eval_dispatch(cond_to_if(exp), env);
+  //   forget();
+  //   return result;
+  // }
+  // if (and(exp)) {
+  //   result = eval_and(exp, env);
+  //   forget();
+  //   return result;
+  // }
+  // if (or(exp)) {
+  //   result = eval_or(exp, env);
+  //   forget();
+  //   return result;
+  // }
+  // if (let(exp)) {
+  //   result = eval_dispatch(let_to_combination(exp), env);
+  //   forget();
+  //   return result;
+  // }
+  if (application(exp)) {
+    result = apply(exp, env);
+    forget();
+    return result;
+  }
 
   // TODO: Let print_element print to stderr. 
   fprintf(stderr, "Unknown expression type.\n");
@@ -62,8 +102,12 @@ Element eval_dispatch(const Element exp, const Element env)
 
 Boolean self_evaluating(const Element exp)
 {
-  // TODO: Check if string too.
-  return exp.type_tag == NUMBER;
+  // TODO: Check if string, bools too.
+  if (exp.type_tag == NUMBER)
+    return TRUE;
+  if (exp.type_tag == PAIR && exp.contents.pair_ptr == NULL)
+    return TRUE;
+  return FALSE;
 }
 
 Boolean variable(const Element exp)
@@ -147,7 +191,7 @@ Element apply_compound(const Element procedure, Pair *arguments)
     .type_tag = PAIR,
     .contents.pair_ptr = arguments
   };
-
+  printf("applying function...\n");
   return eval_sequence(
     procedure_body(procedure),
     extend_environment(
@@ -157,17 +201,20 @@ Element apply_compound(const Element procedure, Pair *arguments)
   );
 }
 
-// The compiler may or may not perform tail-call optimization here. But we
-// should rework evaluation into a giant while loop with a stack to
-// explicitly control it.
+// The compiler may or may not perform C-level tail-call optimization here.
+// But on the Lisp level we can at least reuse the current stack frame by
+// popping off the top in preparation for pushing a new frame.
+
 Element eval_sequence(const Element exps, const Element env)
 {
-  // Are there more expressions after the head?
+  // Check if there more expressions after the head.
   if (cdr(exps).contents.pair_ptr) {
     eval_dispatch(car(exps), env);
+    // forget();
     return eval_sequence(cdr(exps), env);
   }
 
+  // forget();
   return eval_dispatch(car(exps), env);
 }
 

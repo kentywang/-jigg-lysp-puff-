@@ -3,8 +3,8 @@
 #include "lisp.h"
 
 void print_element(const Element);
+void print_pair(const Pair *);
 static void print_element_dispatch(const Element);
-static void print_pair(const Pair *);
 static void print_pair_contents(const Pair *);
 
 void print_element(const Element e)

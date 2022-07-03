@@ -134,7 +134,7 @@ Element make_frame(const Element bindings, const Element values)
   // mismatch. Hopefully !s works.
   // TODO: List procedure name, number of args vs. parameters
   if (!bindings.contents.pair_ptr != !values.contents.pair_ptr) {
-    fprintf(stderr, "Arity mismatch.\n");
+    fprintf(stderr, "Arity mismatch during make_frame.\n");
     exit(ARITY_MISMATCH);
   }
 
@@ -148,7 +148,18 @@ Element make_frame(const Element bindings, const Element values)
     return e;
   }
 
+  printf("make_frame\n");
+  // print_element(bindings);
+  printf("\n");
   // Still have parameters and arguments.
+  car(bindings);
+  printf("car bindings done\n");
+  cdr(bindings);
+  printf("cdr bindings done\n");
+  car(values);
+  printf("car values done\n");
+  cdr(values);
+  printf("cdr values done\n");
   return make_cons(
     make_cons(car(bindings), car(values)),
     make_frame(cdr(bindings), cdr(values))

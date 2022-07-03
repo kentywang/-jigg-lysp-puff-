@@ -25,23 +25,23 @@ int main(int argc, const char *argv[])
 
 void read_eval_print_loop(void)
 {
-  Element exp;
-  Element val;
-  Element env = setup_environment();
+  global_env = setup_environment();
 
   while (TRUE) {
     // Read
+    printf("\nglobal env\n");
+    print_element(global_env);
     printf("λ 》");
-    read_input(&exp);
+    read_input(&curr_exp);
 
     // printf("READ:\n");
-    // print_element(exp);
+    // print_element(curr_exp);
 
     // Eval
-    val = eval_dispatch(exp, env);
+    curr_val = eval_dispatch(curr_exp, global_env);
 
     // Print
-    print_element(val);
+    print_element(curr_val);
 
     // printf("ENV:\n");
     // print_element(env);
