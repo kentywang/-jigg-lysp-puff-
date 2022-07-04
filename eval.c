@@ -8,7 +8,6 @@ static Boolean variable(const Element);
 static Boolean application(const Element);
 static Boolean special_form(char *, const Element);
 
-static Element make_procedure(const Element, const Element);
 static Element apply(const Element, const Element);
 static Element list_of_values(const Element, const Element);
 static Element make_procedure(const Element, const Element);
@@ -27,7 +26,7 @@ static Element definition_value(const Element);
 
 Element eval_dispatch(const Element exp, const Element env)
 {
-  // printf("EVAL:\n");
+  // //X printf("EVAL:\n");
   // print_element(exp);
 
   save(env.contents.pair_ptr);
@@ -97,6 +96,8 @@ Element eval_dispatch(const Element exp, const Element env)
 
   // TODO: Let print_element print to stderr. 
   fprintf(stderr, "Unknown expression type.\n");
+  print_element(exp);
+  printf("\n");
   exit(BAD_EXPRESSION);
 }
 
@@ -171,14 +172,18 @@ Element list_of_values(const Element operands, const Element env)
 
 Element make_procedure(const Element exp, const Element env)
 {
+  Element x = make_cons(
+    cdr(cdr(exp)), // lambda body
+    env
+  );
+  //X printf("make proc addr: %p\n", x.contents.pair_ptr);
+  // print_pair(x.contents.pair_ptr);
+  //X printf("\n");
   Element e = {
     .type_tag = COMPOUND_PROCEDURE,
     .contents.pair_ptr = make_cons(
-      car(cdr(exp)), // Lambda parameters
-      make_cons(
-        cdr(cdr(exp)), // Lambda body
-        env
-      )
+      car(cdr(exp)), // lambda parameters
+      x
     ).contents.pair_ptr
   };
 
@@ -191,7 +196,12 @@ Element apply_compound(const Element procedure, Pair *arguments)
     .type_tag = PAIR,
     .contents.pair_ptr = arguments
   };
-  printf("applying function...\n");
+  //X printf("applying function...\n");
+  //X printf("procc: %p\n", procedure.contents.pair_ptr);
+  // print_element(procedure);
+  //X printf("\n");
+  // print_pair(procedure.contents.pair_ptr);
+  //X printf("\n");
   return eval_sequence(
     procedure_body(procedure),
     extend_environment(
@@ -235,14 +245,6 @@ Element eval_definition(const Element exp, const Element env)
   return e;
 }
 
-/*
-   f
-  /\
- /\ \
-x 5 /\
-   /\ null
-  y 6
-*/
 void define_variable(
   const Element var,
   const Element val,
@@ -278,6 +280,9 @@ Element procedure_parameters(const Element exp)
 
 Element procedure_body(const Element exp)
 {
+  //X printf("procc body: %p\n", car(cdr(exp)).contents.pair_ptr);
+  // print_element(car(cdr(exp)));
+  //X printf("\n");
   return car(cdr(exp));
 }
 

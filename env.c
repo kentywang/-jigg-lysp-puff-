@@ -10,17 +10,13 @@ static Element the_empty_environment = {
   .contents.pair_ptr = NULL
 };
 
-// Multivariable frame of ((+ add) (- sub)).
-//        0   1   2   3   4
-// cars [ p2, - , p3, + , p1]
-// cdrs [ e0,sub, p4,add, e0] cdr at [0] is pointer to next frame.
-
 Boolean is_empty_environment(const Element env)
 {
   return env.type_tag == the_empty_environment.type_tag &&
     env.contents.pair_ptr == the_empty_environment.contents.pair_ptr;
 }
 
+// Environment is a list of frame, where each frame is a list of bindings.
 Element setup_environment(void)
 {
   return extend_environment(
@@ -80,11 +76,21 @@ Element lookup_variable_value(char *var, Element env)
 /*
 We'll be generating two pairs at a time, one pair as the backbone of the
 list, and the other as the actual variable-and-value pair.
-  p
- /\
-2 /\
- 5 /\
-  8  null
+
+          full env
+             /\
+ this ______/  \   
+ frame     /\   \
+          /  \   \
+         /\   \   \
+        x  1  /\   \
+             /\ \   \
+            y  2 \   \
+                nil  /\
+                    /  \
+                   /    \  
+                next   nil
+                frame
 */
 Element load_frame(const Binding *b)
 {
@@ -148,18 +154,19 @@ Element make_frame(const Element bindings, const Element values)
     return e;
   }
 
-  printf("make_frame\n");
+  //X printf("make_frame\n");
   // print_element(bindings);
-  printf("\n");
+  //X printf("\n");
   // Still have parameters and arguments.
+  //X printf("bindings addr: %p\n", &bindings);
   car(bindings);
-  printf("car bindings done\n");
+  //X printf("car bindings done\n");
   cdr(bindings);
-  printf("cdr bindings done\n");
+  //X printf("cdr bindings done\n");
   car(values);
-  printf("car values done\n");
+  //X printf("car values done\n");
   cdr(values);
-  printf("cdr values done\n");
+  //X printf("cdr values done\n");
   return make_cons(
     make_cons(car(bindings), car(values)),
     make_frame(cdr(bindings), cdr(values))

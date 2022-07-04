@@ -68,6 +68,9 @@ These should be in them:
         (* (fact (+ n -1)) n))))
 ```
 ```
+(define id (lambda (x) x))
+```
+```
 (define cons (lambda (x y) (lambda (m) (m x y))))
 ```
 ```
@@ -188,6 +191,12 @@ Not a procedure.
   - Fixed. We need to evaluate `()` as a self-evaluating expression.
 - Now infinite loop when GCing, and also if delete symbol, corrupted data.
   Why?
+    - A: we have cycles in env! Because defined functions have env in it. Need
+      to mark seen nodes.
+  - Why unexpected type tag? Corrupted data?
+- Okay, so if I leave out cleanup_element, I still see unexpected type tag
+  after GC. If I leave it in, I also get corrupted symbols.
+  
 ### Lessons learned
 - Creating a parser was quite a task on its own. Even for that alone I'm
   proud of my work.

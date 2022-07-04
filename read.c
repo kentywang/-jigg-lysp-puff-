@@ -79,7 +79,7 @@ void read_dispatch(Element *e)
 
     e->contents.pair_ptr->car.type_tag = SYMBOL;
     e->contents.pair_ptr->car.contents.symbol = string_alloc(QUOTE_LENGTH);
-    printf("quote address: %p\n", e->contents.pair_ptr->car.contents.symbol);
+
     strcpy(e->contents.pair_ptr->car.contents.symbol, QUOTE);
 
     e->contents.pair_ptr->cdr.type_tag = PAIR;
@@ -194,10 +194,10 @@ char *create_symbol()
   // Copy over word from stdin buffer to free pair's car.
   strncpy(s, word_buffer, buffer_index);
 
-  // Will this handle empty strings?
+  // TODO: Will this handle empty strings?
   *(s + buffer_index) = '\0';
-  printf("create_symbol\n  \"%s\", size: %d\n", s, buffer_index);
-  printf("address: %p\n", s);
+  // printf("create_symbol\n  \"%s\", size: %d\n", s, buffer_index);
+  // printf("address: %p\n", s);
   // Flush word buffer.
   buffer_index = 0;
 

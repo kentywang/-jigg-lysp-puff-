@@ -26,15 +26,15 @@ int main(int argc, const char *argv[])
 void read_eval_print_loop(void)
 {
   global_env = setup_environment();
-
+  // print_element(global_env);
   while (TRUE) {
     // Read
-    printf("\nglobal env\n");
-    print_element(global_env);
+    //X printf("\nglobal env\n");
+    // print_element(global_env);
     printf("λ 》");
     read_input(&curr_exp);
 
-    // printf("READ:\n");
+    // //X printf("READ:\n");
     // print_element(curr_exp);
 
     // Eval
@@ -43,7 +43,7 @@ void read_eval_print_loop(void)
     // Print
     print_element(curr_val);
 
-    // printf("ENV:\n");
+    // //X printf("ENV:\n");
     // print_element(env);
 
     // Free memory step?

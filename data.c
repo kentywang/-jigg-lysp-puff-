@@ -22,13 +22,15 @@ Element make_cons(const Element x, const Element y)
 
   e.type_tag = PAIR;
   e.contents.pair_ptr = p;
-  printf("Consed car: \n");
-  print_element(x);
-  printf("Consed cdr: \n");
-  print_element(y);
-  // printf("Consed pair: \n");
+  // printf("Consed car:\n");
+  // print_element(x);
+  // print_element(p->car);
+  // printf("Consed cdr: \n");
+  // print_element(y);
+  // print_element(p->cdr);
+  // // printf("Consed pair: \n");
   // print_pair(p);
-  printf("\n");
+  // printf("\n");
   return e;
 }
 
@@ -65,7 +67,7 @@ Element car(const Element x)
 {
   // Add check?
   if (!x.contents.pair_ptr) {
-    printf("null pair ptr!\n");
+    //X printf("null pair ptr!\n");
   }
   return x.contents.pair_ptr->car;
 }
@@ -74,7 +76,7 @@ Element cdr(const Element x)
 {
   // Add check?
   if (!x.contents.pair_ptr) {
-    printf("null pair ptr!\n");
+    //X printf("null pair ptr!\n");
   }
   return x.contents.pair_ptr->cdr;
 }

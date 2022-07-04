@@ -15,6 +15,9 @@ void print_element(const Element e)
 
 void print_element_dispatch(const Element e)
 {
+  //X printf("all type tage: %d\n", e.type_tag);
+  //X printf("all type tage: %x\n", e.type_tag);
+  //X printf("all type tage: %u\n", e.type_tag);
   switch (e.type_tag) {
   case PAIR:
     if (e.contents.pair_ptr)
@@ -38,6 +41,14 @@ void print_element_dispatch(const Element e)
   case COMPOUND_PROCEDURE:
     // TODO: Show name.
     printf("#<procedure>");
+    // //X printf("\n");
+    // print_element(e.contents.pair_ptr->car);
+    // //X printf("\n");
+    // print_element(e.contents.pair_ptr->cdr);
+    // //X printf("\n");
+    break;
+  default:
+    printf("Unexpected type tag: %u\n", e.type_tag);
     break;
   }
 }
@@ -48,7 +59,7 @@ void print_pair(const Pair *p)
   //   p->car.type_tag == SYMBOL &&
   //   strcmp(p->car.contents.symbol, QUOTE) == 0
   // ) {
-  //   printf("\'");
+  //   //X printf("\'");
   //   print_pair_contents(p->cdr.contents.pair_ptr);
   // } else {
   printf("(");
