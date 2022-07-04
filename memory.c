@@ -3,7 +3,7 @@
 #include "lisp.h"
 
 #define HEAP_LIMIT 50
-#define STACK_LIMIT 50
+#define STACK_LIMIT 100
 
 // Array of pair addresses (not array of pairs)
 static Pair *heap1[HEAP_LIMIT];
@@ -75,7 +75,7 @@ Pair *get_next_free_ptr(void)
 // stack, marking each as traversable (and thus to-retain).
 void gc(void)
 { 
-  //X printf("GC START!");
+  printf("GC START!");
   if (index_s > 0) {
     // Mark addresses referenced by stack.
     for (int i = 0; i <= index_s; i++)
@@ -98,7 +98,7 @@ void gc(void)
       if (curr_heap[i] == curr_exp.contents.pair_ptr) {
         mark_to_keep(curr_heap[i]);
         //X printf("keeping this curr expr: ");
-        print_pair(curr_heap[i]);
+        // print_pair(curr_heap[i]);
         //X printf(" whose cdr has addr: %p\n", curr_heap[i]->cdr.contents.pair_ptr);
       }
   
@@ -159,7 +159,7 @@ void gc(void)
       // Copy address to other heap.
       next_heap[index_h++] = p;
       //X printf("HEAP element %d, %p\n", index_h, p);
-      print_pair(p);
+      // print_pair(p);
       //X printf("\n");
     }
     else
@@ -175,18 +175,22 @@ void gc(void)
   }
   // Reset list of deleted addresses too.
   reset_deleted();
-  //X printf("GCed, current heap size: %d\n", index_h);
-  //X printf("last val:\n");
+  printf("GCed, current heap size: %d\n", index_h);
+  printf("last val:\n");
   print_element(curr_val);
-  //X printf("\nCurr expr\n");
+  printf("\nCurr expr\n");
   print_element(curr_exp);
-  //X printf("\nglobal env\n");
+  printf("\nglobal env\n");
   print_element(global_env);
-  //X printf("\nCurr stack height: %d\n", index_s);
+  printf("\nCurr stack height: %d\n", index_s);
   if (stack[index_s-1]) {
-    //X printf("Curr stack env: %p\n", stack[index_s-1]);
-    print_pair(stack[index_s-1]);
-    //X printf("\n");
+    int y = index_s-1;
+    while (y >= 0) {
+      printf("stack env at index %d: %p\n", y, stack[y]);
+      print_pair(stack[y]);
+      printf("\n");
+      y--;
+    }
   }
 }
 
@@ -213,14 +217,14 @@ void mark_to_keep(Pair *p)
     for (int i = 0; i < HEAP_LIMIT; i++)
       if (curr_heap[i] == p && !keep[i]) {
         //X printf("mark_to_keep\n  ");
-        print_pair(p);
+        // print_pair(p);
         //X printf("\n");
 
         keep[i] = TRUE;
 
         if (p->car.type_tag == PAIR || p->car.type_tag == COMPOUND_PROCEDURE) {
           //X printf("first get car\n");
-          print_pair(p->car.contents.pair_ptr);
+          // print_pair(p->car.contents.pair_ptr);
         }
     
         if (p->cdr.type_tag == PAIR || p->cdr.type_tag == COMPOUND_PROCEDURE) {
@@ -284,11 +288,11 @@ void cleanup_pair(Pair *p)
 {
   if (p) {
     //X printf("cleanup pair: \n");
-    print_pair(p);
+    // print_pair(p);
     //X printf("\nfirst, car\n");
-    // cleanup_element(p->car);
+    cleanup_element(p->car);
     //X printf("next, cdr\n");
-    // cleanup_element(p->cdr);
+    cleanup_element(p->cdr);
     // Check that it hasn't been freed yet.
     if (!already_deleted(p)) {
       //X printf("finally, freeing pair at %p\n", p);

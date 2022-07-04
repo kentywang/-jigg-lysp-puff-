@@ -13,6 +13,11 @@ so if their contents change, the cons does too. But if the elements are atoms
 */
 Element make_cons(const Element x, const Element y)
 {
+  printf("MAKE_CONS:\n");
+  printf(" car, before:\n");
+  print_element(x);
+  printf(" cdr, before: \n");
+  print_element(y);
   Element e;
 
   Pair *p = get_next_free_ptr();
@@ -22,15 +27,19 @@ Element make_cons(const Element x, const Element y)
 
   e.type_tag = PAIR;
   e.contents.pair_ptr = p;
-  // printf("Consed car:\n");
-  // print_element(x);
-  // print_element(p->car);
-  // printf("Consed cdr: \n");
-  // print_element(y);
-  // print_element(p->cdr);
-  // // printf("Consed pair: \n");
+  printf(" car, after:\n");
+  print_element(x);
+  print_element(p->car);
+  printf(" cdr, after: \n");
+  print_element(y);
+  print_element(p->cdr);
+  // printf("Consed pair: \n");
   // print_pair(p);
   // printf("\n");
+  printf("MAKE_CONS result: ");
+  print_element(e);
+  printf("\n");
+
   return e;
 }
 

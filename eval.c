@@ -26,8 +26,8 @@ static Element definition_value(const Element);
 
 Element eval_dispatch(const Element exp, const Element env)
 {
-  // //X printf("EVAL:\n");
-  // print_element(exp);
+  printf("EVAL:\n");
+  print_element(exp);
 
   save(env.contents.pair_ptr);
 
@@ -132,6 +132,8 @@ Boolean special_form(char *symbol, const Element exp)
 
 Element apply(const Element exp, const Element env)
 {
+  printf("APPLY:\n");
+
   // Since these single-use abstractions are just aliases, let's just
   // define them within this function.
   Element (*operator)(const Element) = &car;
@@ -163,11 +165,15 @@ Element list_of_values(const Element operands, const Element env)
     return e;
   }
 
-  // Instead of defer argument evaluation order to the C compiled to decide,
-  // we can choose to explicitly set the order to left-to-right.
+  // Instead of letting the C compiler decide argument evaluation order,
+  // we choose to explicitly set the order to left-to-right.
   e = eval_dispatch(car(operands), env);
-
-  return make_cons(e, list_of_values(cdr(operands), env));
+  Element l = list_of_values(cdr(operands), env);
+  Element result = make_cons(e, l);
+  printf("LIST_OF_VALUES result: ");
+  print_element(result);
+  printf("\n");
+  return result;
 }
 
 Element make_procedure(const Element exp, const Element env)
@@ -179,6 +185,7 @@ Element make_procedure(const Element exp, const Element env)
   //X printf("make proc addr: %p\n", x.contents.pair_ptr);
   // print_pair(x.contents.pair_ptr);
   //X printf("\n");
+
   Element e = {
     .type_tag = COMPOUND_PROCEDURE,
     .contents.pair_ptr = make_cons(
@@ -192,22 +199,25 @@ Element make_procedure(const Element exp, const Element env)
 
 Element apply_compound(const Element procedure, Pair *arguments)
 {
+  printf("APPLY COMPOUND:\n");
+
   Element e = {
     .type_tag = PAIR,
     .contents.pair_ptr = arguments
   };
-  //X printf("applying function...\n");
-  //X printf("procc: %p\n", procedure.contents.pair_ptr);
-  // print_element(procedure);
-  //X printf("\n");
-  // print_pair(procedure.contents.pair_ptr);
-  //X printf("\n");
+  printf("proc addr: %p\n", procedure.contents.pair_ptr);
+  printf("proc: \n");
+  print_element(procedure);
+  printf("\n");
+
+  Element y = extend_environment(
+    make_frame(procedure_parameters(procedure), e),
+    procedure_environment(procedure)
+  );
+  // printf("y\n");
   return eval_sequence(
     procedure_body(procedure),
-    extend_environment(
-      make_frame(procedure_parameters(procedure), e),
-      procedure_environment(procedure)
-    )
+    y
   );
 }
 

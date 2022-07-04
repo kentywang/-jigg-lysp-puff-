@@ -64,6 +64,7 @@ Binding find_binding(char *var, Element env)
 
 Element lookup_variable_value(char *var, Element env)
 {
+  printf("LOOKUP_VARIABLE_VALUE\n");
   Binding b = find_binding(var, env);
 
   if (b.variable)

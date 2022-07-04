@@ -196,7 +196,34 @@ Not a procedure.
   - Why unexpected type tag? Corrupted data?
 - Okay, so if I leave out cleanup_element, I still see unexpected type tag
   after GC. If I leave it in, I also get corrupted symbols.
-  
+- Maybe the issue is that we're leaving out pairs that are created during
+  eval.
+- Sure, we can record a list of all addresses we malloc so we can keep track
+  of which we've freed, but that doesn't get us closer to figuring out which
+  addresses we need to keep.
+  - Maybe we need to preserve more in each stack frame than just env.
+  - Maybe before each get_next_free_ptr, we should push our current "unsaved"
+    work to the stack. The stack being the same List stack we use for saving
+    envs.
+```
+get_next_free_ptr
+  called by
+    data.make_cons
+    env.load_frame
+    read.read_dispatch
+    read.read_parens
+
+make_cons
+  called by
+    env.extend_environment
+    env.make_frame
+    eval.eval_definition
+    eval.list_of_values
+    eval.make_procedure
+    eval.define_variable
+    primitive.make_cons
+    primitive.make_list
+```
 ### Lessons learned
 - Creating a parser was quite a task on its own. Even for that alone I'm
   proud of my work.
