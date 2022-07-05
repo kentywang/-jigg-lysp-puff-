@@ -91,6 +91,7 @@ extern Pair *get_next_free_ptr(void);
 extern char *string_alloc(int);
 extern void save(Pair *);
 extern void forget(void);
+extern void free_element(Element *);
 
 /* data.c */
 extern Element make_cons(const Element, const Element);

@@ -196,8 +196,8 @@ Not a procedure.
   - Why unexpected type tag? Corrupted data?
 - Okay, so if I leave out cleanup_element, I still see unexpected type tag
   after GC. If I leave it in, I also get corrupted symbols.
-- Maybe the issue is that we're leaving out pairs that are created during
-  eval.
+- The issue seems to be that we're freeing pairs that were created during
+  eval which we still needed.
 - Sure, we can record a list of all addresses we malloc so we can keep track
   of which we've freed, but that doesn't get us closer to figuring out which
   addresses we need to keep.
@@ -206,15 +206,13 @@ Not a procedure.
     work to the stack. The stack being the same List stack we use for saving
     envs.
 ```
-get_next_free_ptr
-  called by
+get_next_free_ptr called by
     data.make_cons
     env.load_frame
     read.read_dispatch
     read.read_parens
 
-make_cons
-  called by
+make_cons called by
     env.extend_environment
     env.make_frame
     eval.eval_definition
@@ -223,7 +221,34 @@ make_cons
     eval.define_variable
     primitive.make_cons
     primitive.make_list
+
+string_alloc called by
+    data.clone
+    read.read_dispatch
+    read.read_parens
+    read.create_symbol
 ```
+
+- When I mutate the curr_exp for the subsequent input, I must not forget to
+  free the pair or symbol that I'm overwriting.
+- There's three things to consider: not freeing everything (memory leak),
+  freeing things twice (easy to notice), and freeing too much (like what I
+  experienced when I freed intermediate values used during eval).
+    - Freeing too much happens when I don't capture all the roots to mark to
+      keep. Which happens right now when I GC during read or eval and free
+      intermediate values I still need.
+- I'm currently relying on everything allocated being in the Lisp heap. If
+  that's not the case, I'll have a memory leak.
+- Every malloc needs an accompanying free, ideally in the same function.
+  - But that only solves the memory leak issue; it doesn't address the
+    freeing too much issue.
+  - To solve that, I need to make sure we preserve all intermediate values so
+    they don't get freed during GC. One way to do that is before every
+    string_alloc or get_next_free_ptr, we make sure to push our current work
+    to the stack.
+- Also, why is the heap so big after GC? It was like 45 pairs after just
+  defining enum-interval.
+
 ### Lessons learned
 - Creating a parser was quite a task on its own. Even for that alone I'm
   proud of my work.

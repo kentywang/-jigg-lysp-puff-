@@ -9,6 +9,7 @@
 static void read_dispatch(Element *);
 static char *read_word(const char);
 static void read_parens(Element *);
+static void read_quote(Element *);
 static char *create_symbol(void);
 static char getch(void);
 static void ungetch(const char);
@@ -34,15 +35,29 @@ void read_input(Element *e)
   read_dispatch(e);
 }
 
+void read_quote(Element *e)
+{
+  e->type_tag = PAIR;
+  e->contents.pair_ptr = get_next_free_ptr();
+
+  e->contents.pair_ptr->car.type_tag = SYMBOL;
+  e->contents.pair_ptr->car.contents.symbol = string_alloc(QUOTE_LENGTH);
+
+  strcpy(e->contents.pair_ptr->car.contents.symbol, QUOTE);
+
+  e->contents.pair_ptr->cdr.type_tag = PAIR;
+  e->contents.pair_ptr->cdr.contents.pair_ptr = get_next_free_ptr();
+
+  return read_dispatch(&e->contents.pair_ptr->cdr.contents.pair_ptr->car);
+  // Relying on default initialization for empty list ending.
+}
+
 void read_dispatch(Element *e)
 {
   char c = getch();
 
   if (c == '(') {
     print_verbose("read_dispatch\n  (\n");
-
-    // TODO: Why not move this into the function?
-    e->type_tag = PAIR;
     return read_parens(e);
   }
   if (
@@ -73,22 +88,8 @@ void read_dispatch(Element *e)
   }
 
   // Convert single-quotes into a list beginning with "quote".
-  if (c == '\'') {
-    e->type_tag = PAIR;
-    e->contents.pair_ptr = get_next_free_ptr();
-
-    e->contents.pair_ptr->car.type_tag = SYMBOL;
-    e->contents.pair_ptr->car.contents.symbol = string_alloc(QUOTE_LENGTH);
-
-    strcpy(e->contents.pair_ptr->car.contents.symbol, QUOTE);
-
-    e->contents.pair_ptr->cdr.type_tag = PAIR;
-    e->contents.pair_ptr->cdr.contents.pair_ptr = get_next_free_ptr();
-
-    return read_dispatch(&e->contents.pair_ptr->cdr.contents.pair_ptr->car);
-
-    // Relying on default initialization for empty list ending.
-  }
+  if (c == '\'')
+    return read_quote(e);
 
   // Everything else.
   fprintf(stderr, "Bad identifier: %c\n", c);
@@ -122,6 +123,8 @@ char *read_word(const char prev_char)
 void read_parens(Element *e)
 {
   print_verbose("read_parens\n  starting...\n");
+
+  e->type_tag = PAIR;
   char c;
 
   // Skip over leading whitespace. This will also keep reading after newline
@@ -141,24 +144,10 @@ void read_parens(Element *e)
   
   if (c == '(') {
     print_verbose("read_parens\n  (\n");
-    p->car.type_tag = PAIR;
     read_parens(&p->car);
-  } else if (c == '\'') {
-    // TODO: Nearly the same as in read_input. Must abstract this.
-    p->car.type_tag = PAIR;
-    p->car.contents.pair_ptr = get_next_free_ptr();
-
-    p->car.contents.pair_ptr->car.type_tag = SYMBOL;
-    p->car.contents.pair_ptr->car.contents.symbol = string_alloc(QUOTE_LENGTH);
-    strcpy(p->car.contents.pair_ptr->car.contents.symbol, QUOTE);
-
-    p->car.contents.pair_ptr->cdr.type_tag = PAIR;
-    p->car.contents.pair_ptr->cdr.contents.pair_ptr = get_next_free_ptr();
-
-    read_dispatch(&p->car.contents.pair_ptr->cdr.contents.pair_ptr->car);
-
-    // Relying on default initialization for empty list ending.
-  } else {
+  } else if (c == '\'')
+    read_quote(&p->car);
+  else {
     print_verbose("read_parens\n  %c at word buffer index %d\n", c, buffer_index);
 
     // Almost the same as in read_input. Is there an abstraction here?
@@ -180,7 +169,6 @@ void read_parens(Element *e)
 
   // Continue with the cdr, but no need to assign it to anything since it's
   // already been done by set_next_free_ptr.
-  p->cdr.type_tag = PAIR;
   read_parens(&p->cdr);
 
   return;

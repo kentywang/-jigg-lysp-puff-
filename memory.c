@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "lisp.h"
 
-#define HEAP_LIMIT 50
+#define HEAP_LIMIT 5000
 #define STACK_LIMIT 100
 
 // Array of pair addresses (not array of pairs)
@@ -71,6 +71,11 @@ Pair *get_next_free_ptr(void)
   return p;
 }
 
+void free_element(Element *e)
+{
+  return;
+}
+
 // For GC, need to traverse all pairs starting in registers and
 // stack, marking each as traversable (and thus to-retain).
 void gc(void)
@@ -90,7 +95,7 @@ void gc(void)
         mark_to_keep(curr_heap[i]);
   }
 
-  // Mark addresses referenced by curr_exp, curr_val.
+  // Mark addresses referenced by curr_exp.
   // TODO: Does symbol element also need to be marked? Currently we're only
   // marking pairs.
   if (curr_exp.type_tag == PAIR || curr_exp.type_tag == COMPOUND_PROCEDURE)
@@ -101,11 +106,12 @@ void gc(void)
         // print_pair(curr_heap[i]);
         //X printf(" whose cdr has addr: %p\n", curr_heap[i]->cdr.contents.pair_ptr);
       }
-  
-  if (curr_val.type_tag == PAIR || curr_val.type_tag == COMPOUND_PROCEDURE)
-    for (int i = 0; i < HEAP_LIMIT; i++)
-      if (curr_heap[i] == curr_val.contents.pair_ptr)
-        mark_to_keep(curr_heap[i]);
+  // Disabling curr_val preservation because we don't actually need it for
+  // computation.
+  // if (curr_val.type_tag == PAIR || curr_val.type_tag == COMPOUND_PROCEDURE)
+  //   for (int i = 0; i < HEAP_LIMIT; i++)
+  //     if (curr_heap[i] == curr_val.contents.pair_ptr)
+  //       mark_to_keep(curr_heap[i]);
 
   // //X printf("BEFORE RECURSIVE MARKING\n");
   int k = 0;
