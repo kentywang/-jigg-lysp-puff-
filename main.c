@@ -45,7 +45,7 @@ void read_eval_print_loop(void)
     print_element(curr_val);
 
     // Generated Lisp structure for input, output no longer needed.
-    cleanup_element(curr_exp);
-    cleanup_element(curr_val);
+    // cleanup_element(curr_exp); // could this overwrite needed data?
+    // cleanup_element(curr_val); // could this overwrite needed data?
   }
 }
