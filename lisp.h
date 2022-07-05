@@ -89,9 +89,10 @@ extern Element curr_val;
 extern Element global_env;
 extern Pair *get_next_free_ptr(void);
 extern char *string_alloc(int);
-extern void save(Pair *);
+extern void save(const Element *);
 extern void forget(void);
-extern void free_element(Element *);
+extern void cleanup_element(Element);
+static void reset_deleted(void);
 
 /* data.c */
 extern Element make_cons(const Element, const Element);

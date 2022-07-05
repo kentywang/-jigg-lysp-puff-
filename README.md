@@ -137,7 +137,7 @@ Not a procedure.
         (cons start
               (enum-interval (+ 1 start)
                              end)))))
-(enum-interval 1 3)
+(enum-interval 1 10)
 ```
   - Also try spamming `'1`, mix with other commands
   - Make sure define_variable mutates global env. I suspect it doesn't.
@@ -218,8 +218,8 @@ get_next_free_ptr called by
     read.read_dispatch > read_quoted, read_parenthesized  // shouldn't lose any intermediate values since we have the root as curr_exp which points to all parsed input
 
 make_cons called by
-    eval.apply_compound
-    env.make_frame < eval.apply_compound
+    eval.apply
+    env.make_frame
     eval.eval_definition
     eval.list_of_values
     eval.make_procedure
@@ -257,6 +257,17 @@ GC, which only triggers off of Lisp heap size)
 - Also, why is the heap so big after GC? It was like 45 pairs after just
   defining enum-interval.
 - Why is `9` in `(list 'n 9)` evaluated as symbol?
+- Realization: as long as make_cons is the only malloc we care about, and we
+  protect the contents of make_cons if GC happens during it, we're good on the
+  eval front if and only if eval is just a nest of make_cons calls.
+  - Actually, not true, since if 2 make_cons are nested in a make_cons, while
+    calling the 2nd make_cons, the other one's value could be lost.
+- We could (but don't) explicitly set evaluation order to left-to-right. C's
+  order is also unspecified.
+- We need to make sure both arguments to make_cons are avaiable when function
+  is applied. Once in the function though, we don't need to worry since it's
+  copied in.
+- Why `(fact 2)` now failing too?
 
 ### Lessons learned
 - Creating a parser was quite a task on its own. Even for that alone I'm

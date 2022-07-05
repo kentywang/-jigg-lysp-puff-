@@ -8,13 +8,11 @@ static Boolean variable(const Element);
 static Boolean application(const Element);
 static Boolean special_form(char *, const Element);
 
-static Element apply(const Element, const Element);
 static Element list_of_values(const Element, const Element);
 static Element make_procedure(const Element, const Element);
-static Element apply_compound(const Element, Pair *);
+static Element apply(const Element, Pair *);
 static Element eval_sequence(const Element, const Element);
 static Element eval_definition(const Element, const Element);
-static void define_variable(const Element, const Element, const Element);
 static Element eval_if(const Element, const Element);
 
 static Element operator(const Element);
@@ -31,23 +29,18 @@ Element eval_dispatch(const Element exp, const Element env)
   printf("EVAL:\n");
   print_element(exp);
 
-  save(env.contents.pair_ptr);
-
   Element result;
 
   if (self_evaluating(exp)) {
     result = exp;
-    forget();
     return result;
   }
   if (variable(exp)) {
     result = lookup_variable_value(exp.contents.symbol, env);
-    forget();
     return result;
   }
   if (special_form(QUOTE, exp)) {
     result = text_of_quotation(exp);
-    forget();
     return result;
   }
   // if (assignment(exp)) {
@@ -57,17 +50,14 @@ Element eval_dispatch(const Element exp, const Element env)
   // }
   if (special_form(DEFINE, exp)) {
     result = eval_definition(exp, env);
-    forget();
     return result;
   }
   if (special_form(IF, exp)) {
     result = eval_if(exp, env);
-    forget();
     return result;
   }
   if (special_form(LAMBDA, exp)) {
     result = make_procedure(exp, env);
-    forget();
     return result;
   }
   // if (cond(exp)) {
@@ -91,8 +81,10 @@ Element eval_dispatch(const Element exp, const Element env)
   //   return result;
   // }
   if (application(exp)) {
-    result = apply(exp, env);
-    forget();
+    result = apply(
+      eval_dispatch(operator(exp), env), // procedure
+      list_of_values(operands(exp), env).contents.pair_ptr // arguments //k needs exp, env
+    );
     return result;
   }
 
@@ -132,25 +124,6 @@ Boolean special_form(char *symbol, const Element exp)
   );
 }
 
-Element apply(const Element exp, const Element env)
-{
-  printf("APPLY:\n");
-
-  Element procedure = eval_dispatch(operator(exp), env);
-  Pair *arguments = list_of_values(operands(exp), env).contents.pair_ptr;
-
-  if (procedure.type_tag == PRIMITIVE_PROCEDURE)
-    // Does this allow null args?
-    return (*procedure.contents.func_ptr)(arguments);
-  else if (procedure.type_tag == COMPOUND_PROCEDURE)
-    return apply_compound(procedure, arguments);
-
-  // Not a procedure. TODO: Print operator.
-  fprintf(stderr, "Not a procedure.\n");
-  exit(NOT_PROCEDURE);
-  return procedure;
-}
-
 Element list_of_values(const Element operands, const Element env)
 {
   Element e = {
@@ -162,60 +135,79 @@ Element list_of_values(const Element operands, const Element env)
     return e;
   }
 
-  // Instead of letting the C compiler decide argument evaluation order,
-  // we choose to explicitly set the order to left-to-right.
-  e = eval_dispatch(car(operands), env);
-  Element l = list_of_values(cdr(operands), env);
-  Element result = make_cons(e, l);
+  save(&operands);
+  save(&env);
+
+  e = make_cons(
+    eval_dispatch(car(operands), env),
+    list_of_values(cdr(operands), env) //k needs operands, env
+  );
+
+  forget();
+  forget();
+
   printf("LIST_OF_VALUES result: ");
-  print_element(result);
+  print_element(e);
   printf("\n");
-  return result;
+  return e;
 }
 
 Element make_procedure(const Element exp, const Element env)
 {
-  Element x = make_cons(
-    cdr(cdr(exp)), // lambda body
-    env
-  );
-  //X printf("make proc addr: %p\n", x.contents.pair_ptr);
-  // print_pair(x.contents.pair_ptr);
-  //X printf("\n");
+  save(&exp);
 
-  Element e = {
+  Element proc = {
     .type_tag = COMPOUND_PROCEDURE,
     .contents.pair_ptr = make_cons(
       car(cdr(exp)), // lambda parameters
-      x
+      make_cons(
+        cdr(cdr(exp)), // lambda body //k needs exp, env
+        env //k needs env
+      )
     ).contents.pair_ptr
   };
 
-  return e;
+  forget();
+
+  return proc;
 }
 
-Element apply_compound(const Element procedure, Pair *arguments)
+Element apply(const Element procedure, Pair *arguments)
 {
-  printf("APPLY COMPOUND:\n");
+  if (procedure.type_tag == PRIMITIVE_PROCEDURE)
+    // Does this allow null args?
+    return (*procedure.contents.func_ptr)(arguments);
 
-  Element e = {
-    .type_tag = PAIR,
-    .contents.pair_ptr = arguments
-  };
-  printf("proc addr: %p\n", procedure.contents.pair_ptr);
-  printf("proc: \n");
-  print_element(procedure);
-  printf("\n");
+  if (procedure.type_tag == COMPOUND_PROCEDURE) {
+    Element values = {
+      .type_tag = PAIR,
+      .contents.pair_ptr = arguments
+    };
 
-  Element y = make_cons(
-    make_frame(procedure_parameters(procedure), e),
-    procedure_environment(procedure)
-  );
-  // printf("y\n");
-  return eval_sequence(
-    procedure_body(procedure),
-    y
-  );
+    printf("proc addr: %p\n", procedure.contents.pair_ptr);
+    printf("proc: \n");
+    print_element(procedure);
+    printf("\n");
+
+    save(&procedure);
+
+    Element env = make_cons(
+      make_frame(procedure_parameters(procedure), values),
+      procedure_environment(procedure) //k needs procedure
+    );
+
+    forget();
+
+    return eval_sequence(
+      procedure_body(procedure),
+      env
+    );
+  }
+
+  // Not a procedure. TODO: Print operator.
+  fprintf(stderr, "Not a procedure.\n");
+  exit(NOT_PROCEDURE);
+  return procedure;
 }
 
 // The compiler may or may not perform C-level tail-call optimization here.
@@ -226,52 +218,48 @@ Element eval_sequence(const Element exps, const Element env)
   // Check if there more expressions after the head.
   if (cdr(exps).contents.pair_ptr) {
     eval_dispatch(car(exps), env);
-    // forget();
-    return eval_sequence(cdr(exps), env);
+    return eval_sequence(cdr(exps), env); //k needs exprs, env
   }
 
-  // forget();
   return eval_dispatch(car(exps), env);
 }
 
 Element eval_definition(const Element exp, const Element env)
 {
-  define_variable(
+  save(&env);
+  save(&exp);
+
+  Element e = make_cons(
     definition_variable(exp),
-    eval_dispatch(definition_value(exp), env),
-    env
+    eval_dispatch(definition_value(exp), env)
   );
 
-  Element e = {
+  forget();
+  forget();
+
+  // TODO: Add check to see if variable exists in first frame.
+  // If we had our own version of set-car!, we could use it here.
+  env.contents.pair_ptr->car = make_cons(
+    e,
+    first_frame(env) //k needs env
+  );
+
+  // Return not important.
+  Element throwaway = {
     .type_tag = PAIR,
     .contents.pair_ptr = NULL
   };
 
-  // Return not important.
-  return e;
-}
-
-void define_variable(
-  const Element var,
-  const Element val,
-  const Element env
-)
-{
-  // TODO: Add check to see if variable exists in first frame.
-  // If we had our own version of set-car!, we could use it here.
-  env.contents.pair_ptr->car = make_cons(
-    make_cons(var, val),
-    first_frame(env)
-  );
+  return throwaway;
 }
 
 Element eval_if(const Element exp, const Element env)
 {
   if (is_true(eval_dispatch(car(cdr(exp)), env))) {
-    return eval_dispatch(car(cdr(cdr(exp))), env);
+    return eval_dispatch(car(cdr(cdr(exp))), env); //k needs exp, env
   }
 
-  return eval_dispatch(car(cdr(cdr(cdr(exp)))), env);
+  return eval_dispatch(car(cdr(cdr(cdr(exp)))), env); //k needs exp, env
 }
 
 Element operator(const Element exp)
@@ -296,9 +284,6 @@ Element procedure_parameters(const Element exp)
 
 Element procedure_body(const Element exp)
 {
-  //X printf("procc body: %p\n", car(cdr(exp)).contents.pair_ptr);
-  // print_element(car(cdr(exp)));
-  //X printf("\n");
   return car(cdr(exp));
 }
 
@@ -313,7 +298,7 @@ Element definition_variable(const Element exp)
   return car(cdr(exp));
 }
 
-// Gets the 1 in (define x 1) 
+// Gets the (+ 1 2) in (define x (+ 1 2)) 
 Element definition_value(const Element exp)
 {
   return car(cdr(cdr(exp)));

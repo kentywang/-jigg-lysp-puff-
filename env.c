@@ -142,12 +142,12 @@ Element make_frame(const Element bindings, const Element values)
 
   // Both empty.
   if (!bindings.contents.pair_ptr && !values.contents.pair_ptr) {
-    Element e = {
+    Element empty_frame = {
       .type_tag = PAIR,
       .contents.pair_ptr = NULL
     };
 
-    return e;
+    return empty_frame;
   }
 
   //X printf("make_frame\n");
@@ -163,10 +163,19 @@ Element make_frame(const Element bindings, const Element values)
   //X printf("car values done\n");
   cdr(values);
   //X printf("cdr values done\n");
-  return make_cons(
+
+  save(&bindings);
+  save(&values);
+
+  Element frame = make_cons(
     make_cons(car(bindings), car(values)),
     make_frame(cdr(bindings), cdr(values))
   );
+
+  forget();
+  forget();
+
+  return frame;
 }
 
 Element first_frame(const Element env)

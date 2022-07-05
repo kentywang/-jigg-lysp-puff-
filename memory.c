@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "lisp.h"
 
-#define HEAP_LIMIT 5000
+#define HEAP_LIMIT 50
 #define STACK_LIMIT 100
 
 // Array of pair addresses (not array of pairs)
@@ -26,8 +26,9 @@ static int index_s = 0;  // Index of next free slot
 static Boolean already_deleted(void *);
 static void mark_to_keep(Pair *);
 static void add_to_deleted(void *);
+// static void reset_deleted(void);
 static void cleanup_pair(Pair *);
-static void cleanup_element(Element);
+// static void cleanup_element(Element);
 static void gc(void);
 
 // We'll use this to keep a running list of deleted addresses
@@ -41,7 +42,6 @@ typedef struct linked_list_node AddressNode;
 
 static AddressNode *deleted = NULL;
 
-static void reset_deleted(void);
 
 // "Registers" that GC uses as roots to start marking.
 Element curr_exp;
@@ -55,10 +55,16 @@ char *string_alloc(int n)
  
 Pair *get_next_free_ptr(void)
 {
+  printf("malloc time\n");
   Pair *p = malloc(sizeof(Pair));
-  // //X printf("%p\n", p);
-  if (index_h == HEAP_LIMIT)
+  printf("new mallocc addr %p\n", p);
+  if (index_h == HEAP_LIMIT){
+    printf("heap height: %d\n", index_h);
+    printf("heap limit: %d\n", HEAP_LIMIT);
+    printf("gc soon\n");
     gc();
+    printf("GC ended\n");
+  }
 
   if (index_h == HEAP_LIMIT) {
     fprintf(stderr, "Heap overflow: heap height: %d\n", index_h);
@@ -66,21 +72,19 @@ Pair *get_next_free_ptr(void)
   }
 
   curr_heap[index_h++] = p;
-  //X printf("Space left: %d\n", HEAP_LIMIT - index_h);
+  printf("Space left: %d\n", HEAP_LIMIT - index_h);
 
   return p;
 }
 
-void free_element(Element *e)
-{
-  return;
-}
 
 // For GC, need to traverse all pairs starting in registers and
 // stack, marking each as traversable (and thus to-retain).
 void gc(void)
 { 
+  printf("hello!");
   printf("GC START!");
+
   if (index_s > 0) {
     // Mark addresses referenced by stack.
     for (int i = 0; i <= index_s; i++)
@@ -335,16 +339,16 @@ void cleanup_element(Element e)
   // No other cleanup needed except those that needed malloc.
 }
 
-void save(Pair *p)
+void save(const Element *e)
 {
   if (index_s == STACK_LIMIT) {
     fprintf(stderr, "Stack overflow: stack height: %d\n", index_s);
     exit(STACK_OVERFLOW);
   }
 
-  stack[index_s++] = p;
+  stack[index_s++] = e->contents.pair_ptr;
 
-  //X printf("STACK_HEIGHT: %d\n", index_s);
+  printf("STACK_HEIGHT: %d\n", index_s);
   // //X printf("CURR ENV: ");
   // print_pair(stack[index_s-1]);
   // //X printf("\n");

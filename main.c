@@ -40,10 +40,12 @@ void read_eval_print_loop(void)
 
     // Eval
     curr_val = eval_dispatch(curr_exp, global_env);
-    free_element(&curr_exp);
 
     // Print
     print_element(curr_val);
-    free_element(&curr_val);
+
+    // Generated Lisp structure for input, output no longer needed.
+    cleanup_element(curr_exp);
+    cleanup_element(curr_val);
   }
 }
