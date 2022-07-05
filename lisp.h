@@ -100,7 +100,6 @@ extern Element cdr(const Element);
 extern Boolean is_true(const Element);
 
 /* env.c */
-extern Element extend_environment(const Element, const Element);
 extern Element setup_environment(void);
 extern Binding find_binding(char *, Element);
 extern Element lookup_variable_value(char *, Element);
@@ -111,6 +110,3 @@ extern Boolean is_empty_environment(const Element);
 
 /* primitive.c */
 extern Binding initial_frame[];
-
-/* util.c */
-extern Boolean is_integer(char *);

@@ -17,6 +17,8 @@ static Element eval_definition(const Element, const Element);
 static void define_variable(const Element, const Element, const Element);
 static Element eval_if(const Element, const Element);
 
+static Element operator(const Element);
+static Element operands(const Element);
 static Element procedure_parameters(const Element);
 static Element procedure_body(const Element);
 static Element procedure_environment(const Element);
@@ -134,13 +136,8 @@ Element apply(const Element exp, const Element env)
 {
   printf("APPLY:\n");
 
-  // Since these single-use abstractions are just aliases, let's just
-  // define them within this function.
-  Element (*operator)(const Element) = &car;
-  Element (*operands)(const Element) = &cdr;
-
-  Element procedure = eval_dispatch((*operator)(exp), env);
-  Pair *arguments = list_of_values((*operands)(exp), env).contents.pair_ptr;
+  Element procedure = eval_dispatch(operator(exp), env);
+  Pair *arguments = list_of_values(operands(exp), env).contents.pair_ptr;
 
   if (procedure.type_tag == PRIMITIVE_PROCEDURE)
     // Does this allow null args?
@@ -210,7 +207,7 @@ Element apply_compound(const Element procedure, Pair *arguments)
   print_element(procedure);
   printf("\n");
 
-  Element y = extend_environment(
+  Element y = make_cons(
     make_frame(procedure_parameters(procedure), e),
     procedure_environment(procedure)
   );
@@ -224,7 +221,6 @@ Element apply_compound(const Element procedure, Pair *arguments)
 // The compiler may or may not perform C-level tail-call optimization here.
 // But on the Lisp level we can at least reuse the current stack frame by
 // popping off the top in preparation for pushing a new frame.
-
 Element eval_sequence(const Element exps, const Element env)
 {
   // Check if there more expressions after the head.
@@ -278,6 +274,16 @@ Element eval_if(const Element exp, const Element env)
   return eval_dispatch(car(cdr(cdr(cdr(exp)))), env);
 }
 
+Element operator(const Element exp)
+{
+  return car(exp);
+}
+
+Element operands(const Element exp)
+{
+  return cdr(exp);
+}
+
 Element text_of_quotation(const Element exp)
 {
   return car(cdr(exp));
@@ -301,11 +307,13 @@ Element procedure_environment(const Element exp)
   return cdr(cdr(exp));
 }
 
+// Gets the x in (define x 1) 
 Element definition_variable(const Element exp)
 {
   return car(cdr(exp));
 }
 
+// Gets the 1 in (define x 1) 
 Element definition_value(const Element exp)
 {
   return car(cdr(cdr(exp)));

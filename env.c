@@ -19,15 +19,10 @@ Boolean is_empty_environment(const Element env)
 // Environment is a list of frame, where each frame is a list of bindings.
 Element setup_environment(void)
 {
-  return extend_environment(
+  return make_cons(
     load_frame(initial_frame),
     the_empty_environment
   );
-}
-
-Element extend_environment(const Element frame, const Element base_env)
-{
-  return make_cons(frame, base_env);
 }
 
 Binding find_binding(char *var, Element env)

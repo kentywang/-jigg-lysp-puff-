@@ -2,7 +2,7 @@
 
  Compiling:
 ```
-clang data.c memory.c env.c eval.c main.c primitive.c print.c read.c util.c
+clang data.c memory.c env.c eval.c main.c primitive.c print.c read.c
 ```
 Running:
 ```
@@ -53,6 +53,12 @@ These should be in them:
 ```
 ```
     '(1(  -2  3a  )4)
+```
+```
+(list 'n 2 3)
+```
+```
+(list '- -2)
 ```
 ```
 'apple
@@ -208,13 +214,12 @@ Not a procedure.
 ```
 get_next_free_ptr called by
     data.make_cons
-    env.load_frame
-    read.read_dispatch
-    read.read_parens
+    env.load_frame // ignore possible intermediate value loss for this for now, since this only happens at initialization, where we shouldn't need GC anyways
+    read.read_dispatch > read_quoted, read_parenthesized  // shouldn't lose any intermediate values since we have the root as curr_exp which points to all parsed input
 
 make_cons called by
-    env.extend_environment
-    env.make_frame
+    eval.apply_compound
+    env.make_frame < eval.apply_compound
     eval.eval_definition
     eval.list_of_values
     eval.make_procedure
@@ -222,11 +227,13 @@ make_cons called by
     primitive.make_cons
     primitive.make_list
 
+(no leak if its element is guaranteed to be freed sometime)
 string_alloc called by
-    data.clone
-    read.read_dispatch
-    read.read_parens
-    read.create_symbol
+    data.make_cons > data.clone 
+    read.read_dispatch > read_quoted, read_word 
+(just need freeing to ensure no memory leak. We won't need to worry about
+preserving intermediate values before string_alloc because it can't trigger
+GC, which only triggers off of Lisp heap size)
 ```
 
 - When I mutate the curr_exp for the subsequent input, I must not forget to
@@ -246,8 +253,10 @@ string_alloc called by
     they don't get freed during GC. One way to do that is before every
     string_alloc or get_next_free_ptr, we make sure to push our current work
     to the stack.
+  - But how do we know our current work?
 - Also, why is the heap so big after GC? It was like 45 pairs after just
   defining enum-interval.
+- Why is `9` in `(list 'n 9)` evaluated as symbol?
 
 ### Lessons learned
 - Creating a parser was quite a task on its own. Even for that alone I'm
