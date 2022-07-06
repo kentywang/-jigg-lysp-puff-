@@ -81,10 +81,10 @@ Element eval_dispatch(const Element exp, const Element env)
   //   return result;
   // }
   if (application(exp)) {
-    result = apply(
-      eval_dispatch(operator(exp), env), // procedure
-      list_of_values(operands(exp), env).contents.pair_ptr // arguments //k needs exp, env
-    );
+    Element proc = eval_dispatch(operator(exp), env); // procedure
+    Pair *args = list_of_values(operands(exp), env).contents.pair_ptr; // arguments //k needs exp, env
+    
+    result = apply(proc, args);
     return result;
   }
 
@@ -135,13 +135,18 @@ Element list_of_values(const Element operands, const Element env)
     return e;
   }
 
-  save(&operands);
-  save(&env);
+  save(operands);
+  save(env);
 
-  e = make_cons(
-    eval_dispatch(car(operands), env),
-    list_of_values(cdr(operands), env) //k needs operands, env
-  );
+  Element first_value = eval_dispatch(car(operands), env);
+
+  save(first_value);
+
+  Element rest = list_of_values(cdr(operands), env); //k needs operands, env
+
+  forget();
+
+  e = make_cons(first_value, rest);
 
   forget();
   forget();
@@ -154,16 +159,18 @@ Element list_of_values(const Element operands, const Element env)
 
 Element make_procedure(const Element exp, const Element env)
 {
-  save(&exp);
+  save(exp);
+
+  Element lambda_body_and_env = make_cons(
+    cdr(cdr(exp)), // lambda body //k needs exp, env
+    env //k needs env
+  );
 
   Element proc = {
     .type_tag = COMPOUND_PROCEDURE,
     .contents.pair_ptr = make_cons(
       car(cdr(exp)), // lambda parameters
-      make_cons(
-        cdr(cdr(exp)), // lambda body //k needs exp, env
-        env //k needs env
-      )
+      lambda_body_and_env
     ).contents.pair_ptr
   };
 
@@ -174,6 +181,12 @@ Element make_procedure(const Element exp, const Element env)
 
 Element apply(const Element procedure, Pair *arguments)
 {
+  printf("APPLY: \n");
+  print_element(procedure);
+  printf("onto ");
+  print_pair(arguments);
+  printf("\n");
+
   if (procedure.type_tag == PRIMITIVE_PROCEDURE)
     // Does this allow null args?
     return (*procedure.contents.func_ptr)(arguments);
@@ -186,15 +199,18 @@ Element apply(const Element procedure, Pair *arguments)
 
     printf("proc addr: %p\n", procedure.contents.pair_ptr);
     printf("proc: \n");
-    print_element(procedure);
+    print_element(procedure_body(procedure));
     printf("\n");
 
-    save(&procedure);
+    save(procedure);
 
-    Element env = make_cons(
-      make_frame(procedure_parameters(procedure), values),
-      procedure_environment(procedure) //k needs procedure
+    Element first_frame = make_frame(
+      procedure_parameters(procedure), values
     );
+
+    Element rest = procedure_environment(procedure); //k needs procedure
+
+    Element env = make_cons(first_frame, rest);
 
     forget();
 
@@ -226,13 +242,18 @@ Element eval_sequence(const Element exps, const Element env)
 
 Element eval_definition(const Element exp, const Element env)
 {
-  save(&env);
-  save(&exp);
+  save(env);
+  save(exp);
 
-  Element e = make_cons(
-    definition_variable(exp),
-    eval_dispatch(definition_value(exp), env)
-  );
+  Element def_name = definition_variable(exp);
+
+  save(def_name);
+
+  Element def_val = eval_dispatch(definition_value(exp), env);
+
+  forget();
+
+  Element e = make_cons(def_name, def_val);
 
   forget();
   forget();

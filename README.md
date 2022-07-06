@@ -268,7 +268,15 @@ GC, which only triggers off of Lisp heap size)
   is applied. Once in the function though, we don't need to worry since it's
   copied in.
 - Why `(fact 2)` now failing too?
-
+- looks like some of stack isn't being saved after gc
+- i think i fixed ^, but looks like still sometimes double freeing and
+  freeing things I still am reading (unexpected type tag err)
+- I need to still save the intermediates before make_cons.
+- and theres an issue with corrupted data in curr_exp after a repl cycle.
+  type '1 over and over after a gc cycle to see the issue.
+  Ill solve that after the other part
+- I did it. It's buggy, it's ugly, and it might still leak memory in 
+  C heap, but it works! 
 ### Lessons learned
 - Creating a parser was quite a task on its own. Even for that alone I'm
   proud of my work.

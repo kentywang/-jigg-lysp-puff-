@@ -43,8 +43,11 @@ void read_eval_print_loop(void)
 
     // Print
     print_element(curr_val);
+    print_element(global_env);
 
-    // Generated Lisp structure for input, output no longer needed.
+    // Generated Lisp structure for input, output no longer needed. 
+    // and would be memory leak if we overwrote them without first
+    // freeing
     // cleanup_element(curr_exp); // could this overwrite needed data?
     // cleanup_element(curr_val); // could this overwrite needed data?
   }

@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include "lisp.h"
 
-#define HEAP_LIMIT 100
-#define STACK_LIMIT 100
+#define HEAP_LIMIT 150
+#define STACK_LIMIT 300
 
 // Array of pair addresses (not array of pairs)
 static Pair *heap1[HEAP_LIMIT];
@@ -20,7 +20,7 @@ static Pair **curr_heap = heap1;
 // This is the Lisp-level stack used to store the env for each Lisp
 // stack frame. The GC uses this stack to know which roots to keep.
 // Array of pair addresses (not array of pairs).
-static Pair *stack[STACK_LIMIT];
+static Element stack[STACK_LIMIT];
 static int index_s = 0;  // Index of next free slot
 
 static Boolean already_deleted(void *);
@@ -48,6 +48,11 @@ Element curr_exp;
 Element curr_val;
 Element global_env;
 
+int idx(void)
+{
+  return index_h;
+}
+
 char *string_alloc(int n)
 {
   return (char *) malloc(n + 1);
@@ -55,15 +60,12 @@ char *string_alloc(int n)
  
 Pair *get_next_free_ptr(void)
 {
-  printf("malloc time\n");
+  printf("index_h: %d\n", index_h);
   Pair *p = malloc(sizeof(Pair));
   printf("new mallocc addr %p\n", p);
   if (index_h == HEAP_LIMIT){
-    printf("heap height: %d\n", index_h);
     printf("heap limit: %d\n", HEAP_LIMIT);
-    printf("gc soon\n");
     gc();
-    printf("GC ended\n");
   }
 
   if (index_h == HEAP_LIMIT) {
@@ -71,8 +73,9 @@ Pair *get_next_free_ptr(void)
     exit(HEAP_OVERFLOW);
   }
 
-  curr_heap[index_h++] = p;
+  curr_heap[index_h] = p;
   printf("Space left: %d\n", HEAP_LIMIT - index_h);
+  index_h += 1;
 
   return p;
 }
@@ -82,22 +85,47 @@ Pair *get_next_free_ptr(void)
 // stack, marking each as traversable (and thus to-retain).
 void gc(void)
 { 
-  printf("hello!");
   printf("GC START!");
-
-  if (index_s > 0) {
-    // Mark addresses referenced by stack.
-    for (int i = 0; i <= index_s; i++)
-      // TODO: n^4 time complexity, fix
-      for (int j = 0; j < HEAP_LIMIT; j++)
-        if (curr_heap[j] == stack[i])
-          mark_to_keep(curr_heap[j]);
-  // If no stack, we need to keep global env at least.
-  } else {
-    for (int i = 0; i < HEAP_LIMIT; i++)
-      if (curr_heap[i] == global_env.contents.pair_ptr)
-        mark_to_keep(curr_heap[i]);
+  if (index_s-1) {
+    int y = index_s-1;
+    while (y >= 0) {
+      printf("stack exp at index %d\n", y);
+      print_element(stack[y]);
+      printf("\n");
+      y -= 1;
+    }
   }
+  // Mark addresses referenced by stack.
+  for (int i = 0; i < HEAP_LIMIT; i++)
+    // TODO: n^4 time complexity, fix
+    for (int j = 0; j < index_s; j++) {
+      if (
+        stack[j].type_tag == PAIR ||
+        stack[j].type_tag == COMPOUND_PROCEDURE
+      ) {
+        if (curr_heap[i] == stack[j].contents.pair_ptr) {
+          mark_to_keep(curr_heap[i]);
+          printf("stack %d preserved\n", j);
+        }
+      } 
+      // else if (
+      //   // TODO: do we need to save symbol?
+      //   stack[j].type_tag == SYMBOL  ||
+      // ) {
+      //   if (curr_heap[i] == stack[j].contents.symbol) {
+      //     mark_to_keep(curr_heap[i]);
+      //     printf("stack %d preserved\n", j);
+      //   }
+      // }
+      
+    }
+        // stack[j].type_tag != SYMBOL // TODO: do we need to save symbol?
+
+  // TODO: do we need to keep global env too?
+  for (int i = 0; i < HEAP_LIMIT; i++)
+    if (curr_heap[i] == global_env.contents.pair_ptr)
+      mark_to_keep(curr_heap[i]);
+
 
   // Mark addresses referenced by curr_exp.
   // TODO: Does symbol element also need to be marked? Currently we're only
@@ -165,15 +193,30 @@ void gc(void)
 
   for (int i = 0; i < HEAP_LIMIT; i++) {
     Pair *p = curr_heap[i];
+    if (!keep[i]) {
+      printf("heap dry run sweep: \n");
+      print_pair(p);
+      printf("\n");
+    }
+  }
+  for (int i = 0; i < HEAP_LIMIT; i++) {
+    Pair *p = curr_heap[i];
     if (keep[i]) {
       // Copy address to other heap.
-      next_heap[index_h++] = p;
+      next_heap[index_h] = p;
+      index_h += 1;
       //X printf("HEAP element %d, %p\n", index_h, p);
       // print_pair(p);
       //X printf("\n");
     }
-    else
+    else {
+      printf("heap swept: \n");
+      print_pair(p);
+      printf("\n");
       cleanup_pair(p);
+      // cleanup_element(p->car);
+      // cleanup_element(p->cdr);  // no recurse, we're iterating over heap, so should get it all
+    }
   }
 
   // Swap heaps.
@@ -193,13 +236,13 @@ void gc(void)
   printf("\nglobal env\n");
   print_element(global_env);
   printf("\nCurr stack height: %d\n", index_s);
-  if (stack[index_s-1]) {
+  if (index_s-1) {
     int y = index_s-1;
     while (y >= 0) {
-      printf("stack env at index %d: %p\n", y, stack[y]);
-      print_pair(stack[y]);
+      printf("stack exp at index %d\n", y);
+      print_element(stack[y]);
       printf("\n");
-      y--;
+      y -= 1;
     }
   }
 }
@@ -297,19 +340,35 @@ void add_to_deleted(void *ptr)
 void cleanup_pair(Pair *p)
 {
   if (p) {
-    //X printf("cleanup pair: \n");
+    // printf("cleanup pair: \n");
     // print_pair(p);
-    //X printf("\nfirst, car\n");
-    cleanup_element(p->car);
-    //X printf("next, cdr\n");
-    cleanup_element(p->cdr);
+    // printf("\n");
+
+    // dont need this if no recurse
+    // for (int i = 0; i < HEAP_LIMIT; i++)
+    //   if (curr_heap[i] == p && keep[i]) {
+    //     printf("Actually, skipping since marked to keep\n");
+    //     return;
+    //   }
+
+    Element pcar = p->car;
+    Element pcdr = p->cdr;
+
     // Check that it hasn't been freed yet.
     if (!already_deleted(p)) {
-      //X printf("finally, freeing pair at %p\n", p);
+      printf("freeing pair at %p:\n", p);
+      print_pair(p);
+      printf("\n");
       free(p);
       add_to_deleted(p);
     }
-    //X printf("finished with cleaning up pair\n");
+
+
+    // //X printf("\nfirst, car\n");
+    cleanup_element(pcar);
+    // //X printf("next, cdr\n");
+    cleanup_element(pcdr);
+    // //X printf("finished with cleaning up pair\n");
     return;
   } else {
     //X printf("null ptr, no cleanup needed\n");
@@ -321,14 +380,18 @@ void cleanup_pair(Pair *p)
 
 void cleanup_element(Element e)
 {
-  if (e.type_tag == PAIR || e.type_tag == COMPOUND_PROCEDURE)
-    return cleanup_pair(e.contents.pair_ptr);
+  printf("cleanup element \n");
+  print_element(e);
+  printf("\n");
+
+  // if (e.type_tag == PAIR || e.type_tag == COMPOUND_PROCEDURE)
+  //   return cleanup_pair(e.contents.pair_ptr); // no recurse, let heap sweep get to it
   // if (e.type_tag == SIMPLE_PROCEDURE)
   //   return cleanup_pair(e.contents.func_ptr);
   if (e.type_tag == SYMBOL) {
     //X printf("symbol! %p\n", e.contents.symbol);
     if (!already_deleted(e.contents.symbol)) {
-      //X printf("Freeing symbol %s %p\n", e.contents.symbol, e.contents.symbol);
+      printf("Freeing symbol %s %p\n", e.contents.symbol, e.contents.symbol);
       free(e.contents.symbol);
       add_to_deleted(e.contents.symbol);
       //X printf("Done\n");
@@ -339,23 +402,39 @@ void cleanup_element(Element e)
   // No other cleanup needed except those that needed malloc.
 }
 
-void save(const Element *e)
+void save(const Element e)
 {
+  // problem with this is that we still foregt it even when not pair!
+  // leads to accessing another array, horrible...
+  // if (
+  //   e->type_tag != PAIR &&
+  //   e->type_tag != COMPOUND_PROCEDURE  // &&
+  //   // e->type_tag != SYMBOL // TODO: do we need to save symbol?
+  // ) {
+  //   return;
+  // }
   if (index_s == STACK_LIMIT) {
     fprintf(stderr, "Stack overflow: stack height: %d\n", index_s);
     exit(STACK_OVERFLOW);
   }
 
-  stack[index_s++] = e->contents.pair_ptr;
+  stack[index_s] = e; //->contents.pair_ptr; // WARNING not all are pairs
 
   printf("STACK_HEIGHT: %d\n", index_s);
+  index_s += 1;
   // //X printf("CURR ENV: ");
-  // print_pair(stack[index_s-1]);
+  // print_element(stack[index_s-1]);
   // //X printf("\n");
 }
 
 void forget(void)
 {
-  --index_s;
-  stack[index_s] = NULL;
+  // printf("inside forget 1 index_H: %d\n", idx());
+  index_s -= 1;
+  // printf("inside forget 2 index_H: %d, %d\n", idx(), index_s);
+
+  // TODO: do we need to reset its value?
+  // stack[index_s] = NULL;
+  // printf("inside forget 3 index_H: %d\n", idx());
+
 }

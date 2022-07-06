@@ -13,6 +13,10 @@ so if their contents change, the cons does too. But if the elements are atoms
 */
 Element make_cons(const Element x, const Element y)
 {
+  // these could be new, not yet on the stack nor reachable by prev stack exprs
+  save(x);
+  save(y);
+
   printf("MAKE_CONS:\n");
   printf(" car, before:\n");
   print_element(x);
@@ -21,6 +25,9 @@ Element make_cons(const Element x, const Element y)
   Element e;
 
   Pair *p = get_next_free_ptr();
+
+  forget();
+  forget();
 
   p->car = clone(x);
   p->cdr = clone(y);

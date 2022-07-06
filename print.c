@@ -48,7 +48,7 @@ void print_element_dispatch(const Element e)
     // //X printf("\n");
     break;
   default:
-    printf("Unexpected type tag: %u\n", e.type_tag);
+    printf("Unexpected type tag: %u, %p\n", e.type_tag, e.contents.pair_ptr);
     break;
   }
 }

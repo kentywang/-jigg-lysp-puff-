@@ -54,6 +54,10 @@ void read_quoted(Element *e)
 
   return read_dispatch(&e->contents.pair_ptr->cdr.contents.pair_ptr->car);
   // Relying on default initialization for empty list ending.
+
+  printf("malloc %p for ", e->contents.pair_ptr);
+  print_pair(e->contents.pair_ptr);
+  printf("\n");
 }
 
 void read_dispatch(Element *e)
@@ -82,7 +86,7 @@ void read_dispatch(Element *e)
 void read_word(const char c, Element *e)
 {
   fill_word_buffer(c);
-
+  printf("buffer index: %d\n", buffer_index);
   if (is_integer(word_buffer, buffer_index)) {
     e->type_tag = NUMBER;
     e->contents.number = atoi(word_buffer);
@@ -99,7 +103,12 @@ void read_word(const char c, Element *e)
   }
 
   // Flush word buffer.
-  buffer_index = 0;
+  while (buffer_index > 0) {
+    word_buffer[buffer_index-1] = 0;
+    buffer_index -= 1;
+  }
+
+  printf("flushed: %s\n", word_buffer);
 }
 
 void fill_word_buffer(const char prev_char)
@@ -147,13 +156,17 @@ void read_parenthesized(Element *e)
   }
 
   Pair *p = e->contents.pair_ptr = get_next_free_ptr();
-  
+
   ungetch(c); // for read_dispatch to get
   read_dispatch(&p->car);
 
   // Continue with the cdr, but no need to assign it to anything since it's
   // already been done by set_next_free_ptr.
   read_parenthesized(&p->cdr);
+
+  printf("malloc %p for ", p);
+  print_pair(p);
+  printf("\n");
 }
 
 char getch(void)

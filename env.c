@@ -130,18 +130,18 @@ Element load_frame(const Binding *b)
 }
 
 // (a b c) (1 2 3) => ((a . 1) (b . 2) (c . 3))
-Element make_frame(const Element bindings, const Element values)
+Element make_frame(const Element vars, const Element vals)
 {
-  // If only one of bindings or values is null, we have a parameter-argument
+  // If only one of vars or vals is null, we have a parameter-argument
   // mismatch. Hopefully !s works.
   // TODO: List procedure name, number of args vs. parameters
-  if (!bindings.contents.pair_ptr != !values.contents.pair_ptr) {
+  if (!vars.contents.pair_ptr != !vals.contents.pair_ptr) {
     fprintf(stderr, "Arity mismatch during make_frame.\n");
     exit(ARITY_MISMATCH);
   }
 
   // Both empty.
-  if (!bindings.contents.pair_ptr && !values.contents.pair_ptr) {
+  if (!vars.contents.pair_ptr && !vals.contents.pair_ptr) {
     Element empty_frame = {
       .type_tag = PAIR,
       .contents.pair_ptr = NULL
@@ -151,26 +151,35 @@ Element make_frame(const Element bindings, const Element values)
   }
 
   //X printf("make_frame\n");
-  // print_element(bindings);
+  // print_element(vars);
   //X printf("\n");
   // Still have parameters and arguments.
-  //X printf("bindings addr: %p\n", &bindings);
-  car(bindings);
-  //X printf("car bindings done\n");
-  cdr(bindings);
-  //X printf("cdr bindings done\n");
-  car(values);
-  //X printf("car values done\n");
-  cdr(values);
-  //X printf("cdr values done\n");
+  //X printf("vars addr: %p\n", &vars);
+  // car(vars);
+  // //X printf("car vars done\n");
+  // cdr(vars);
+  // //X printf("cdr vars done\n");
+  // car(vals);
+  // //X printf("car vals done\n");
+  // cdr(vals);
+  // //X printf("cdr vals done\n");
 
-  save(&bindings);
-  save(&values);
+  save(vars);
+  save(vals);
 
-  Element frame = make_cons(
-    make_cons(car(bindings), car(values)),
-    make_frame(cdr(bindings), cdr(values))
-  );
+  Element first_binding = make_cons(car(vars), car(vals));
+
+  printf("firstbinding which should be saved going into gc:\n");
+  print_element(first_binding);
+
+  save(first_binding);
+
+  Element rest = make_frame(cdr(vars), cdr(vals));
+
+  forget();
+  
+  printf("\n");
+  Element frame = make_cons(first_binding, rest);
 
   forget();
   forget();
