@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "lisp.h"
 
-#define HEAP_LIMIT 150
+#define HEAP_LIMIT 22
 #define STACK_LIMIT 300
 
 // Array of pair addresses (not array of pairs)

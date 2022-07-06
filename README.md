@@ -277,6 +277,8 @@ GC, which only triggers off of Lisp heap size)
   Ill solve that after the other part
 - I did it. It's buggy, it's ugly, and it might still leak memory in 
   C heap, but it works! 
+- quotespam still errors eventually, so look into that
+
 ### Lessons learned
 - Creating a parser was quite a task on its own. Even for that alone I'm
   proud of my work.
