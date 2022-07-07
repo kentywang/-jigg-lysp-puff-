@@ -6,27 +6,24 @@
 static Element load_frame(const Binding *);
 
 static Element the_empty_environment = {
-  .type_tag = PAIR,
-  .contents.pair_ptr = NULL
+  .type = PAIR,
+  .data.pair_ptr = NULL
 };
 
-Boolean is_empty_environment(const Element env)
-{
-  return env.type_tag == the_empty_environment.type_tag &&
-    env.contents.pair_ptr == the_empty_environment.contents.pair_ptr;
+Boolean is_empty_environment(const Element env) {
+  return env.type == the_empty_environment.type &&
+    env.data.pair_ptr == the_empty_environment.data.pair_ptr;
 }
 
 // Environment is a list of frame, where each frame is a list of bindings.
-Element setup_environment(void)
-{
+Element setup_environment(void) {
   return make_cons(
     load_frame(initial_frame),
     the_empty_environment
   );
 }
 
-Binding find_binding(char *var, Element env)
-{
+Binding find_binding(char *var, Element env) {
   Binding b = {
     // This will be our signal to calling function indicating no binding
     // found.
@@ -40,11 +37,11 @@ Binding find_binding(char *var, Element env)
     Element frame_scanner = first_frame(env);
 
     // We still have pairs to scan through in frame.
-    while (frame_scanner.contents.pair_ptr && strcmp(var, car(car(frame_scanner)).contents.symbol) != 0) {
+    while (frame_scanner.data.pair_ptr && strcmp(var, car(car(frame_scanner)).data.symbol) != 0) {
       frame_scanner = cdr(frame_scanner);
     }
 
-    if (frame_scanner.contents.pair_ptr) {
+    if (frame_scanner.data.pair_ptr) {
       // We exited the while loop because we found the variable.
       b.variable = var; // Use same string allocated as variable in parameter.
       b.value = cdr(car(frame_scanner));
@@ -57,9 +54,7 @@ Binding find_binding(char *var, Element env)
   return b;
 }
 
-Element lookup_variable_value(char *var, Element env)
-{
-  printf("LOOKUP_VARIABLE_VALUE\n");
+Element lookup_variable_value(char *var, Element env) {
   Binding b = find_binding(var, env);
 
   if (b.variable)
@@ -84,15 +79,13 @@ list, and the other as the actual variable-and-value pair.
             y  2 \   \
                 nil  /\
                     /  \
-                   /    \  
-                next   nil
-                frame
+                next    \
+                frame   nil
 */
-Element load_frame(const Binding *b)
-{
+Element load_frame(const Binding *b) {
   Element frame_head = {
-    .type_tag = PAIR,
-    .contents.pair_ptr = NULL
+    .type = PAIR,
+    .data.pair_ptr = NULL
   };
 
   // We need to handle the first element a bit differently since we set the
@@ -101,28 +94,28 @@ Element load_frame(const Binding *b)
     Pair *curr_backbone = get_next_free_ptr();
     Pair *p = get_next_free_ptr();
 
-    frame_head.contents.pair_ptr = curr_backbone;
+    frame_head.data.pair_ptr = curr_backbone;
 
-    p->car.type_tag = SYMBOL;
+    p->car.type = SYMBOL;
     // We could also copy the string into GCed memory.
-    p->car.contents.symbol = b->variable;
+    p->car.data.symbol = b->variable;
     p->cdr = b->value;
 
     // Wrapping Pair pointer in Element is optional, since the default
     // initialization gives it the PAIR type tag.
-    curr_backbone->car.contents.pair_ptr = p;
+    curr_backbone->car.data.pair_ptr = p;
 
     // Similar to above.
     while ((++b)->variable) { // Stop when we encounter END_OF_BINDINGS.
-      curr_backbone->cdr.contents.pair_ptr = get_next_free_ptr();
-      curr_backbone = curr_backbone->cdr.contents.pair_ptr;
+      curr_backbone->cdr.data.pair_ptr = get_next_free_ptr();
+      curr_backbone = curr_backbone->cdr.data.pair_ptr;
 
       p = get_next_free_ptr();
-      p->car.type_tag = SYMBOL;
-      p->car.contents.symbol = b->variable;
+      p->car.type = SYMBOL;
+      p->car.data.symbol = b->variable;
       p->cdr = b->value;
 
-      curr_backbone->car.contents.pair_ptr = p;
+      curr_backbone->car.data.pair_ptr = p;
     }
   }
 
@@ -130,69 +123,37 @@ Element load_frame(const Binding *b)
 }
 
 // (a b c) (1 2 3) => ((a . 1) (b . 2) (c . 3))
-Element make_frame(const Element vars, const Element vals)
-{
+Element make_frame(const Element vars, const Element vals) {
   // If only one of vars or vals is null, we have a parameter-argument
   // mismatch. Hopefully !s works.
   // TODO: List procedure name, number of args vs. parameters
-  if (!vars.contents.pair_ptr != !vals.contents.pair_ptr) {
+  if (!vars.data.pair_ptr != !vals.data.pair_ptr) {
     fprintf(stderr, "Arity mismatch during make_frame.\n");
     exit(ARITY_MISMATCH);
   }
 
   // Both empty.
-  if (!vars.contents.pair_ptr && !vals.contents.pair_ptr) {
+  if (!vars.data.pair_ptr && !vals.data.pair_ptr) {
     Element empty_frame = {
-      .type_tag = PAIR,
-      .contents.pair_ptr = NULL
+      .type = PAIR,
+      .data.pair_ptr = NULL
     };
 
     return empty_frame;
   }
 
-  //X printf("make_frame\n");
-  // print_element(vars);
-  //X printf("\n");
-  // Still have parameters and arguments.
-  //X printf("vars addr: %p\n", &vars);
-  // car(vars);
-  // //X printf("car vars done\n");
-  // cdr(vars);
-  // //X printf("cdr vars done\n");
-  // car(vals);
-  // //X printf("car vals done\n");
-  // cdr(vals);
-  // //X printf("cdr vals done\n");
-
   save(vars);
   save(vals);
 
   Element first_binding = make_cons(car(vars), car(vals));
-
-  printf("firstbinding which should be saved going into gc:\n");
-  print_element(first_binding);
-
   save(first_binding);
 
   Element rest = make_frame(cdr(vars), cdr(vals));
+  release(3);
 
-  forget();
-  
-  printf("\n");
-  Element frame = make_cons(first_binding, rest);
-
-  forget();
-  forget();
-
-  return frame;
+  return make_cons(first_binding, rest);
 }
 
-Element first_frame(const Element env)
-{
-  return car(env);
-}
+Element first_frame(const Element env) { return car(env); }
 
-Element enclosing_environment(const Element env)
-{
-  return cdr(env);
-}
+Element enclosing_environment(const Element env) { return cdr(env); }

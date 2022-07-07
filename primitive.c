@@ -12,53 +12,58 @@ static Element primitive_car(const Pair *);
 static Element primitive_cdr(const Pair *);
 static Element make_list(const Pair *);
 
+Element NIL = {
+  .type = PAIR,
+  .data.pair_ptr = NULL
+};
+
 Binding initial_frame[] = {
   {
     "+", {
-      .type_tag = PRIMITIVE_PROCEDURE,
-      .contents.func_ptr = &add
+      .type = PRIMITIVE_PROCEDURE,
+      .data.func_ptr = &add
     }
   },
   {
     "*", {
-      .type_tag = PRIMITIVE_PROCEDURE,
-      .contents.func_ptr = &multiply
+      .type = PRIMITIVE_PROCEDURE,
+      .data.func_ptr = &multiply
     }
   },
   {
     "=", {
-      .type_tag = PRIMITIVE_PROCEDURE,
-      .contents.func_ptr = &equals
+      .type = PRIMITIVE_PROCEDURE,
+      .data.func_ptr = &equals
     }
   },
   {
     "cons", {
-      .type_tag = PRIMITIVE_PROCEDURE,
-      .contents.func_ptr = &primitive_make_cons
+      .type = PRIMITIVE_PROCEDURE,
+      .data.func_ptr = &primitive_make_cons
     }
   },
   {
     "car", {
-      .type_tag = PRIMITIVE_PROCEDURE,
-      .contents.func_ptr = &primitive_car
+      .type = PRIMITIVE_PROCEDURE,
+      .data.func_ptr = &primitive_car
     }
   },
   {
     "cdr", {
-      .type_tag = PRIMITIVE_PROCEDURE,
-      .contents.func_ptr = &primitive_cdr
+      .type = PRIMITIVE_PROCEDURE,
+      .data.func_ptr = &primitive_cdr
     }
   },
   {
     "list", {
-      .type_tag = PRIMITIVE_PROCEDURE,
-      .contents.func_ptr = &make_list
+      .type = PRIMITIVE_PROCEDURE,
+      .data.func_ptr = &make_list
     }
   },
   {
-    "nil", {
-      .type_tag = PAIR,
-      .contents.pair_ptr = NULL
+    "nil", {  // TODO: reuse NIL constant here, somehow
+      .type = PAIR,
+      .data.pair_ptr = NULL
     }
   },
   {
@@ -66,77 +71,73 @@ Binding initial_frame[] = {
   }
 };
 
-Element add(const Pair *p)
-{
+Element add(const Pair *p) {
   // Need to check if car is actually a number!
   Element e = {
-    .type_tag = NUMBER,
-    .contents = p->car.contents
+    .type = NUMBER,
+    .data = p->car.data
   };
 
   // Add result of adding up cdr to car, if cdr isn't null.
-  if (!(p->cdr.type_tag == PAIR && !p->cdr.contents.pair_ptr))
-    e.contents.number += add(p->cdr.contents.pair_ptr).contents.number;
+  if (!(p->cdr.type == PAIR && !p->cdr.data.pair_ptr))
+    e.data.number += add(p->cdr.data.pair_ptr).data.number;
 
   return e;
 }
 
-Element multiply(const Pair *p)
-{
+Element multiply(const Pair *p) {
   // Need to check if car is actually a number!
   Element e = {
-    .type_tag = NUMBER,
-    .contents = p->car.contents
+    .type = NUMBER,
+    .data = p->car.data
   };
 
   // Add result of multiplying cdr to product car, if cdr isn't null.
-  if (!(p->cdr.type_tag == PAIR && !p->cdr.contents.pair_ptr))
-    e.contents.number *= multiply(p->cdr.contents.pair_ptr).contents.number;
+  if (!(p->cdr.type == PAIR && !p->cdr.data.pair_ptr))
+    e.data.number *= multiply(p->cdr.data.pair_ptr).data.number;
 
   return e;
 }
 
-Element equals(const Pair *p)
-{
+Element equals(const Pair *p) {
   // Need to check if car is actually a number!
   Element e = {
-    .type_tag = BOOLEAN,
-    .contents.truth = FALSE
+    .type = BOOLEAN,
+    .data.truth = FALSE
   };
 
   if (
-    p->car.type_tag == NUMBER &&
-    p->cdr.type_tag == PAIR &&
-    p->cdr.contents.pair_ptr->car.type_tag == NUMBER &&
-    p->car.contents.number == p->cdr.contents.pair_ptr->car.contents.number
+    p->car.type == NUMBER &&
+    p->cdr.type == PAIR &&
+    p->cdr.data.pair_ptr->car.type == NUMBER &&
+    p->car.data.number == p->cdr.data.pair_ptr->car.data.number
   )
-    e.contents.truth = TRUE;
+    e.data.truth = TRUE;
 
   return e;
 }
 
 // This is different from the make_cons function that is used internally.
 // TODO: Can we just use one function for both purposes?
-Element primitive_make_cons(const Pair *p)
-{
+Element primitive_make_cons(const Pair *p) {
   if (
     // If only one argument...
     (
-      p->cdr.type_tag == PAIR &&
-      !p->cdr.contents.pair_ptr
+      p->cdr.type == PAIR &&
+      !p->cdr.data.pair_ptr
     ) ||
     // Or if more than two arguments...
     (
-      p->cdr.type_tag == PAIR &&
-      p->cdr.contents.pair_ptr->cdr.type_tag == PAIR &&
-      p->cdr.contents.pair_ptr->cdr.contents.pair_ptr
+      p->cdr.type == PAIR &&
+      p->cdr.data.pair_ptr->cdr.type == PAIR &&
+      p->cdr.data.pair_ptr->cdr.data.pair_ptr
     )
   ) {
     fprintf(stderr, "Arity mismatch.\n");
     exit(ARITY_MISMATCH);
   }
 
-  return make_cons(p->car, p->cdr.contents.pair_ptr->car);
+  return make_cons(p->car, p->cdr.data.pair_ptr->car);
 }
 
 /*
@@ -146,14 +147,12 @@ How a pair (1 . 2) looks like:
   /\  null
  1  2
 */
-Element primitive_car(const Pair *p)
-{
-  return p->car.contents.pair_ptr->car;
+Element primitive_car(const Pair *p) {
+  return p->car.data.pair_ptr->car;
 }
 
-Element primitive_cdr(const Pair *p)
-{
-  return p->car.contents.pair_ptr->cdr;
+Element primitive_cdr(const Pair *p) {
+  return p->car.data.pair_ptr->cdr;
 }
 
 /*
@@ -182,17 +181,16 @@ that we can guarantee is always a proper list.
 Even if it's just one element like (list 1), the arg list will be (1) and
 thus always has a car and cdr.
 */
-Element make_list(const Pair *p)
-{
-  if (p->cdr.type_tag == PAIR && !p->cdr.contents.pair_ptr) {
+Element make_list(const Pair *p) {
+  if (p->cdr.type == PAIR && !p->cdr.data.pair_ptr) {
     Element e = {
-      .type_tag = PAIR,
-      .contents.pair_ptr = NULL
+      .type = PAIR,
+      .data.pair_ptr = NULL
     };
 
     // Any empty list is interchangeable with another.
     return make_cons(p->car, e);
   }
 
-  return make_cons(p->car, make_list(p->cdr.contents.pair_ptr));
+  return make_cons(p->car, make_list(p->cdr.data.pair_ptr));
 }
