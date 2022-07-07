@@ -22,6 +22,8 @@ enum error_codes {
   UNEXPECTED_ARG,
   NOT_PROCEDURE,
   ARITY_MISMATCH,
+  STACK_OVERFLOW,
+  HEAP_OVERFLOW
 };
 
 // Be explicit that false should be 0.
@@ -44,7 +46,7 @@ struct element {
     // users:
     PRIMITIVE_PROCEDURE,
     COMPOUND_PROCEDURE
-  } type_tag;
+  } type;
   union {
     Pair *pair_ptr;
     int number;
@@ -53,7 +55,7 @@ struct element {
     // PRIMITIVE_PROCEDURE uses a Pair pointer like PAIR.
     Element (*func_ptr)(const Pair *);
     // Need to store string too.
-  } contents;
+  } data;
 };
 
 struct pair {
@@ -75,37 +77,36 @@ extern Boolean verbosity;
 extern void read_input(Element *);
 
 /* eval.c */
-extern Element eval_dispatch(const Element, const Element);
+extern Element eval_dispatch(Element, Element);
 
 /* print.c */
-extern void print_element(const Element);
+extern void print_element(Element);
+extern void print_pair(const Pair *);
 
-/* stack.c */
-extern void save(Pair *);
-extern void forget(void);
-
-/* heap.c */
+/* memory.c */
 extern Pair *get_next_free_ptr(void);
 extern char *string_alloc(int);
+extern void save(Element);
+extern void release(int);
+extern void cleanup_element(Element);
+static void reset_deleted(void);
+extern int idx(void);
 
 /* data.c */
-extern Element make_cons(const Element, const Element);
-extern Element car(const Element);
-extern Element cdr(const Element);
-extern Boolean is_true(const Element);
+extern Element make_cons(Element, Element);
+extern Element car(Element);
+extern Element cdr(Element);
+extern Boolean is_true(Element);
 
 /* env.c */
-extern Element extend_environment(const Element, const Element);
 extern Element setup_environment(void);
 extern Binding find_binding(char *, Element);
 extern Element lookup_variable_value(char *, Element);
-extern Element make_frame(const Element, const Element);
-extern Element first_frame(const Element);
-extern Element enclosing_environment(const Element);
-extern Boolean is_empty_environment(const Element);
+extern Element make_frame(Element, Element);
+extern Element first_frame(Element);
+extern Element enclosing_environment(Element);
+extern Boolean is_empty_environment(Element);
 
 /* primitive.c */
 extern Binding initial_frame[];
-
-/* util.c */
-extern Boolean is_integer(char *);
+extern Element NIL;

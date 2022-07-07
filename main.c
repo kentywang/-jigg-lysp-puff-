@@ -5,8 +5,7 @@ static void read_eval_print_loop(void);
 
 Boolean verbosity;
 
-int main(int argc, const char *argv[])
-{
+int main(int argc, const char *argv[]) {
   char c;
 
   while (--argc && **++argv == '-')
@@ -23,19 +22,16 @@ int main(int argc, const char *argv[])
   read_eval_print_loop();
 }
 
-void read_eval_print_loop(void)
-{
+void read_eval_print_loop(void) {
   Element exp;
   Element val;
   Element env = setup_environment();
+  save(env);  // keep the global env from being GCed
 
-  while (TRUE) {
+  do {
     // Read
     printf("λ 》");
     read_input(&exp);
-
-    // printf("READ:\n");
-    // print_element(exp);
 
     // Eval
     val = eval_dispatch(exp, env);
@@ -43,9 +39,5 @@ void read_eval_print_loop(void)
     // Print
     print_element(val);
 
-    // printf("ENV:\n");
-    // print_element(env);
-
-    // Free memory step?
-  }
+  } while (TRUE); // Loop
 }

@@ -7,21 +7,23 @@
 #define BUFFER_SIZE 100
 
 static void read_dispatch(Element *);
-static char *read_word(const char);
-static void read_parens(Element *);
-static char *create_symbol(void);
+static void read_word(const char, Element *);
+static void fill_word_buffer(const char);
+static void read_parenthesized(Element *);
+static void read_quoted(Element *);
 static char getch(void);
 static void ungetch(const char);
+static Boolean is_integer(char *s, const int end_index);
 
 // For building word.
 static char word_buffer[BUFFER_SIZE];
-static int buffer_index = 0;
+static int buffer_index = 0; // this is the next free index
 
-// For get/ungetch.
+// For get/ungetch. char_buffer holds either one new char from input or
+// one "regurgitated" input char.
 static char char_buffer;
 
-void read_input(Element *e)
-{
+void read_input(Element *e) {
   char c;
 
   // Skip over leading whitespace.
@@ -34,56 +36,19 @@ void read_input(Element *e)
   read_dispatch(e);
 }
 
-void read_dispatch(Element *e)
-{
+void read_dispatch(Element *e) {
   char c = getch();
 
   if (c == '(') {
-    print_verbose("read_dispatch\n  (\n");
-
-    // TODO: Why not move this into the function?
-    e->type_tag = PAIR;
-    return read_parens(e);
-  }
-  if (
-    isalnum(c) ||
-    // Included arithmetic symbols as valid beginning of a word.
-    c == '+' ||
-    c == '*' ||
-    c == '/' ||
-    c == '-' ||
-    c == '='
-  ) {
-    print_verbose("read_dispatch\n  %c at word buffer index %d\n", c, buffer_index);
-
-    char *s = read_word(c);
-
-    if (is_integer(s)) {
-      e->type_tag = NUMBER;
-      e->contents.number = atoi(s);
-      return;
-    }
-
-    e->type_tag = SYMBOL;
-    e->contents.symbol = s;
+    read_parenthesized(e);
     return;
-  }
-
-  // Convert single-quotes into a list beginning with "quote".
-  if (c == '\'') {
-    e->type_tag = PAIR;
-    e->contents.pair_ptr = get_next_free_ptr();
-
-    e->contents.pair_ptr->car.type_tag = SYMBOL;
-    e->contents.pair_ptr->car.contents.symbol = string_alloc(QUOTE_LENGTH);
-    strcpy(e->contents.pair_ptr->car.contents.symbol, QUOTE);
-
-    e->contents.pair_ptr->cdr.type_tag = PAIR;
-    e->contents.pair_ptr->cdr.contents.pair_ptr = get_next_free_ptr();
-
-    return read_dispatch(&e->contents.pair_ptr->cdr.contents.pair_ptr->car);
-
-    // Relying on default initialization for empty list ending.
+  } else if (c == '\'') {
+    read_quoted(e);
+    return;
+  } else if (TRUE) {
+    print_verbose("read_dispatch\n  %c at word buffer index %d\n", c, buffer_index);
+    read_word(c, e);
+    return;
   }
 
   // Everything else.
@@ -91,8 +56,86 @@ void read_dispatch(Element *e)
   exit(BAD_IDENTIFIER);
 }
 
-char *read_word(const char prev_char)
-{
+// Mutates element to become pair with malloc string as the car, representing
+// the symbol "quote".
+void read_quoted(Element *e) {
+  e->type = PAIR;
+  e->data.pair_ptr = get_next_free_ptr();
+  save(*e);
+
+  e->data.pair_ptr->car.type = SYMBOL;
+  e->data.pair_ptr->car.data.symbol = string_alloc(QUOTE_LENGTH);
+
+  strcpy(e->data.pair_ptr->car.data.symbol, QUOTE);
+
+  e->data.pair_ptr->cdr.type = PAIR;
+  e->data.pair_ptr->cdr.data.pair_ptr = get_next_free_ptr();
+
+  read_dispatch(&e->data.pair_ptr->cdr.data.pair_ptr->car);
+  release(1);
+
+  // Relying on default initialization for empty list ending.
+}
+
+void read_parenthesized(Element *e) {
+  print_verbose("read_parenthesized\n  starting...\n");
+
+  e->type = PAIR;
+  char c;
+
+  // Skip over leading whitespace. This will also keep reading after newline
+  // if we're still within a parens.
+  while (isspace(c = getch()))
+    ;
+
+  // Here, c is non-space char.
+  if (c == ')') {
+    print_verbose("read_parenthesized\n  )\n");
+    // Explicitly set ptr to NULL in case default initialization didn't.
+    e->data.pair_ptr = NULL;
+    return;
+  }
+
+  // Save e's pointer before it gets overwritten w
+  Pair *p = e->data.pair_ptr = get_next_free_ptr();
+  save(*e);
+
+  ungetch(c); // for read_dispatch to get
+  read_dispatch(&p->car);
+
+  // Continue with the cdr, but no need to assign it to anything since it's
+  // already been done by set_next_free_ptr.
+  read_parenthesized(&p->cdr);
+  release(1);
+}
+
+// Mutates element to become either number or malloc string.
+void read_word(const char c, Element *e) {
+  fill_word_buffer(c);
+
+  if (is_integer(word_buffer, buffer_index)) {
+    e->type = NUMBER;
+    e->data.number = atoi(word_buffer);
+  } else {
+    // If not a number, then it's a string that we must allocate for.
+    e->type = SYMBOL;
+    e->data.symbol = string_alloc(buffer_index);
+
+    // Copy over word from stdin buffer to free pair's car.
+    strncpy(e->data.symbol, word_buffer, buffer_index);
+
+    // TODO: Will this handle empty strings?
+    *(e->data.symbol + buffer_index) = '\0';
+  }
+
+  // Flush word buffer.
+  while (buffer_index > 0) {
+    word_buffer[buffer_index-1] = 0;
+    buffer_index -= 1;
+  }
+}
+
+void fill_word_buffer(const char prev_char) {
   word_buffer[buffer_index++] = prev_char;
 
   char c = getch();
@@ -102,110 +145,26 @@ char *read_word(const char prev_char)
     c == '(' ||
     c == ')'
   ) {
-    print_verbose("read_word\n found ending condition\n");
+    print_verbose("fill_word_buffer\n found ending condition\n");
 
     // Our job here is done. Return paren for another function to process.
     // We need to return character to buffer because the count variable must
     // be in sync.
     ungetch(c);
-    return create_symbol();
-  }
-  print_verbose("read_word\n  character is: %c at word buffer index %d\n", c, buffer_index);
-
-  return read_word(c);
-}
-
-void read_parens(Element *e)
-{
-  print_verbose("read_parens\n  starting...\n");
-  char c;
-
-  // Skip over leading whitespace. This will also keep reading after newline
-  // if we're still within a parens.
-  while (isspace(c = getch()))
-    ;
-
-  // At start here, c is non-space char.
-  // This should handle empty lists, since p is initialized to NULL?
-  if (c == ')') {
-    print_verbose("read_parens\n  )\n");
-    e->contents.pair_ptr = NULL;
     return;
   }
+  print_verbose("fill_word_buffer\n  character is: %c at word buffer index %d\n", c, buffer_index);
 
-  Pair *p = e->contents.pair_ptr = get_next_free_ptr();
-  
-  if (c == '(') {
-    print_verbose("read_parens\n  (\n");
-    p->car.type_tag = PAIR;
-    read_parens(&p->car);
-  } else if (c == '\'') {
-    // TODO: Nearly the same as in read_input. Must abstract this.
-    p->car.type_tag = PAIR;
-    p->car.contents.pair_ptr = get_next_free_ptr();
-
-    p->car.contents.pair_ptr->car.type_tag = SYMBOL;
-    p->car.contents.pair_ptr->car.contents.symbol = string_alloc(QUOTE_LENGTH);
-    strcpy(p->car.contents.pair_ptr->car.contents.symbol, QUOTE);
-
-    p->car.contents.pair_ptr->cdr.type_tag = PAIR;
-    p->car.contents.pair_ptr->cdr.contents.pair_ptr = get_next_free_ptr();
-
-    read_dispatch(&p->car.contents.pair_ptr->cdr.contents.pair_ptr->car);
-
-    // Relying on default initialization for empty list ending.
-  } else {
-    print_verbose("read_parens\n  %c at word buffer index %d\n", c, buffer_index);
-
-    // Almost the same as in read_input. Is there an abstraction here?
-    char *s = read_word(c);
-
-    if (is_integer(s)) {
-      p->car.type_tag = NUMBER;
-      p->car.contents.number = atoi(s);
-      print_verbose("read_parens\n  %d was an int\n", p->car.contents.number);
-    } else {
-      p->car.type_tag = SYMBOL;
-      p->car.contents.symbol = s;
-      print_verbose("read_parens\n  %s was a symbol\n", p->car.contents.symbol);
-    }
-  }
-
-  // Continue with the cdr, but no need to assign it to anything since it's
-  // already been done by set_next_free_ptr.
-  p->cdr.type_tag = PAIR;
-  read_parens(&p->cdr);
-
-  return;
+  fill_word_buffer(c);
 }
 
-char *create_symbol()
-{
-  // Reserve memory size for word.
-  char *s = string_alloc(buffer_index);
-
-  // Copy over word from stdin buffer to free pair's car.
-  strncpy(s, word_buffer, buffer_index);
-
-  // Will this handle empty strings?
-  *(s + buffer_index) = '\0';
-  print_verbose("create_symbol\n  \"%s\", size: %d\n", s, buffer_index);
-
-  // Flush word buffer.
-  buffer_index = 0;
-
-  return s;
-}
-
-char getch(void)
-{
+char getch(void) {
   char c;
 
   if (char_buffer)
     c = char_buffer;
   else {
     // TODO: Need lower-level to discern whether reading new input.
-    // printf("> ");
     c = getchar();
   }
 
@@ -217,8 +176,26 @@ char getch(void)
   return c;
 }
 
-void ungetch(const char c)
-{
+void ungetch(const char c) {
   print_verbose("ungetch\n  %c now in char buffer\n", c);
   char_buffer = c;
+}
+
+Boolean is_integer(char *s, const int end_index) {
+  if (end_index == 0)
+    return FALSE;
+
+  int curr_index = 0;
+
+  if (s[curr_index] == '-')
+    curr_index++;
+
+  if (curr_index == end_index)
+    return FALSE;  // since the only character was "-"
+
+  while (curr_index < end_index)
+    if (!isdigit(s[curr_index++]))
+      return FALSE;
+
+  return TRUE;
 }
