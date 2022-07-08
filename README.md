@@ -1,5 +1,11 @@
-# (- scheme 1)
 
+```                                                   
+                    _|                                                        
+  _|_|_|    _|_|_|  _|_|_|      _|_|    _|_|_|  _|_|      _|_|                
+_|_|      _|        _|    _|  _|_|_|_|  _|    _|    _|  _|_|_|_|  _|_| |_|_|
+    _|_|  _|        _|    _|  _|        _|    _|    _|  _|                    
+_|_|_|      _|_|_|  _|    _|    _|_|_|  _|    _|    _|    _|_|_|              
+```
 A Scheme interpreter developed from scratch. Scheme-- runs as a 
 read-evaluate-print loop. It maintains a virtual stack and a virtual 
 heap that store addresses to Lisp pairs.
@@ -104,9 +110,8 @@ done
 - But that only solves the memory leak issue; it doesn't address the
   freeing too much issue.
 - To solve that, I need to make sure we preserve all intermediate values so
-  they don't get freed during GC. One way to do that is before every
-  string_alloc or get_next_free_ptr, we make sure to push our current work
-  to the stack.
+  they don't get freed during GC. One way to do that is before every malloc
+  we make sure to push our current work to the stack.
 - The pattern I've found useful is for each function to be responsible for
   preserving its own intermediate values to prevent GC from taking them, 
   but they needn't have any obligation to preserve those values once it
