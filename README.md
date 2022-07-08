@@ -1,15 +1,6 @@
-## (jigg lisp puff)
+## (- scheme 1)
 
- Compiling:
-```
-clang data.c memory.c env.c eval.c main.c primitive.c print.c read.c
-```
-Running:
-```
-./a.out
-```
-
-A Scheme interpreter developed from scratch in C.
+A Scheme interpreter developed from scratch.
 
  Overview of features
 - Lambda expressions
@@ -62,7 +53,17 @@ A Scheme interpreter developed from scratch in C.
 - Add more primitives and other usual language features.
 - Flesh out verbose mode.
 
-### Tests
+
+Compiling:
+```
+clang data.c memory.c env.c eval.c main.c primitive.c print.c read.c
+```
+Running:
+```
+./a.out
+```
+
+### Tests it passes
 Parsing/printing tests:
 ```
   '(1(  2  3  )4)
