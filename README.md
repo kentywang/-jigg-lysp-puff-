@@ -130,6 +130,7 @@ done
 - Add more primitives and other usual language features.
 - Flesh out verbose mode.
 
+### Try it out
 Compiling:
 ```
 clang data.c memory.c env.c eval.c main.c primitive.c print.c read.c
@@ -137,4 +138,8 @@ clang data.c memory.c env.c eval.c main.c primitive.c print.c read.c
 Running:
 ```
 ./a.out
+```
+Enjoy!
+```
+λ 》
 ```
