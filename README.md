@@ -1,15 +1,93 @@
-## (- scheme 1)
+# (- scheme 1)
 
-A Scheme interpreter developed from scratch.
+A Scheme interpreter developed from scratch. Scheme-- runs as a 
+read-evaluate-print loop. It maintains a virtual stack and a virtual 
+heap that store addresses to Lisp pairs.
 
- Overview of features
-- Lambda expressions
-- Quotations
-- Definitions
-- Conditional expression and booleans
-- Tail call recursion
+The reader parses live user input into a linked list composed of Lisp
+pairs, which is then fed to the evaluator. The evaluator also builds
+its output as a list, which is ultimately passed to the printer to be
+printed. 
+
+During the read phase and the evaluate phase, space is dynamically
+allocated on the heap in C to store newly-created pairs. These
+addresses are then stored on the statically-allocated virtual heap in
+Scheme--.
+
+The heap is partitioned into a working side and free side so that
+when the working side is full, its useful pairs are copied to the
+free side and the roles of the two sides swap. A pair is useful only
+if it can affect the outcome of current or future evaluation. The
+virtual stack maintains the addresses of all the root pairs that
+evaluation may need so that the garbage collector can use those pairs
+as starting nodes to traverse and mark all its lineage as useful. The
+addresses on the virtual heap that aren't marked are then freed from
+memory in C.
+
+### Overview of features
+- Quotations and proper parsing & printing
+```
+λ 》(list 'apple 2 3)
+(apple 2 3)
+
+
+λ 》    '(1   2 (a b   ''(x y))      3        4    )
+(1 2 (a b (quote (quote (x y)))) 3 4)
+```
+- Definitions, lambda expressions and conditionals
+```
+λ 》(define id (lambda (x) x))
+nil
+
+λ 》(id id)
+#<procedure>
+
+
+λ 》(define kons (lambda (x y) (lambda (m) (m x y))))
+nil
+
+λ 》(define kar (lambda (z) (z (lambda (p q) p))))
+nil
+
+λ 》(kar (kons 'a 'b))
+a
+
+
+λ 》(define enum-interval
+      (lambda (start end)
+        (if (= start end)
+            (list start)
+            (cons start
+                  (enum-interval (+ 1 start)
+                                 end)))))
+                                 nil
+                                 
+λ 》(enum-interval 1 8)
+(1 2 3 4 5 6 7 8)
+
+
+λ 》(((lambda (x) (x x))
+      (lambda (fact-gen)
+        (lambda (n)
+          (if (= 0 n)
+              1
+              (* n ((fact-gen fact-gen) (+ n -1)))))))
+     5)
+120
+```
+- Tail-call optimization
+```
+λ 》(define count-to-10k
+      (lambda (x) 
+        (if (= x 10000) 
+            'done 
+            (count-to-10k (+ x 1)))))
+nil
+
+λ 》(count-to-10k 1)
+done
+```
 - Garbage collection (mark-and-sweep)
-- Virtual stack and two virtual heaps
 - Verbose option for tracing evaluation (WIP)
 
 ### Lessons learned
@@ -49,10 +127,8 @@ A Scheme interpreter developed from scratch.
 
 ### Todos
 - Improve time complexity of GC from O(n^4) to O(n).
-- Writeup architecture readme.
 - Add more primitives and other usual language features.
 - Flesh out verbose mode.
-
 
 Compiling:
 ```
@@ -61,76 +137,4 @@ clang data.c memory.c env.c eval.c main.c primitive.c print.c read.c
 Running:
 ```
 ./a.out
-```
-
-### Tests it passes
-Parsing/printing tests:
-```
-  '(1(  2  3  )4)
-```
-```
-   '(1 2 3)
-```
-```
-    '(1 2 (3 4 (5)) 6 7)
-```
-```
-    '(1(  -2  3a  )4)
-```
-```
-(list 'n 2 3)
-```
-```
-(list '- -2)
-```
-```
-'apple
-```
-```
-   'apple
-```
-Evaluation tests:
-```
-(define fact
-  (lambda (n)
-    (if (= n 1)
-        1
-        (* (fact (+ n -1)) n))))
-```
-```
-(define id (lambda (x) x))
-```
-```
-(define cons (lambda (x y) (lambda (m) (m x y))))
-```
-```
-(define car (lambda (z) (z (lambda (p q) p))))
-```
-```
-((lambda (x) (x x)) (lambda (x) (x x)))
-```
-```
-(((lambda (x) (x x))
-  (lambda (fact-gen)
-    (lambda (n)
-      (if (= 0 n)
-          1
-          (* n ((fact-gen fact-gen) (+ n -1)))))))
- 5)
-```
-```
-(define enum-interval
-  (lambda (start end)
-    (if (= start end)
-        (list start)
-        (cons start
-              (enum-interval (+ 1 start)
-                             end)))))
-(enum-interval 1 8)
-```
-For tail-call recursion testing:
-```
-(define y (lambda (x) (if (= x 10000) 'woof (y (+ x 1)))))
-
-(y 1)
 ```
