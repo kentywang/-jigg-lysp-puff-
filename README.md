@@ -134,6 +134,7 @@ done
 - Improve time complexity of GC from O(n^4) to O(n).
 - Add more primitives and other usual language features.
 - Flesh out verbose mode.
+- Valgrind memcheck to verify that there are no memory leaks in C.
 
 Compiling:
 ```
