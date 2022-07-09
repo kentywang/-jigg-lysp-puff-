@@ -37,10 +37,6 @@ typedef struct linked_list_node AddressNode;
 
 static AddressNode *deleted = NULL;
 
-int idx(void) {
-  return index_h;
-}
-
 char *string_alloc(int n) {
   return (char *) calloc(1, n + 1);
 }
