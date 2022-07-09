@@ -90,7 +90,6 @@ extern void save(Element);
 extern void release(int);
 extern void cleanup_element(Element);
 static void reset_deleted(void);
-extern int idx(void);
 
 /* data.c */
 extern Element make_cons(Element, Element);
