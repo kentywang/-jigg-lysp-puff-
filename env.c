@@ -5,6 +5,11 @@
 
 static Element load_frame(const Binding *);
 
+static Element binding_name(Element);
+static Element binding_value(Element);
+static Element first_binding(Element);
+static Element rest_bindings(Element);
+
 static Element the_empty_environment = {
   .type = PAIR,
   .data.pair_ptr = NULL
@@ -34,17 +39,23 @@ Binding find_binding(char *var, Element env) {
     return b;
 
   do {
-    Element frame_scanner = first_frame(env);
+    Element curr_frame = first_frame(env);
 
     // We still have pairs to scan through in frame.
-    while (frame_scanner.data.pair_ptr && strcmp(var, car(car(frame_scanner)).data.symbol) != 0) {
-      frame_scanner = cdr(frame_scanner);
+    while (
+      curr_frame.data.pair_ptr &&
+      strcmp(
+        var,
+        binding_name(first_binding(curr_frame)).data.symbol
+      ) != 0
+    ) {
+      curr_frame = rest_bindings(curr_frame);
     }
 
-    if (frame_scanner.data.pair_ptr) {
+    if (curr_frame.data.pair_ptr) {
       // We exited the while loop because we found the variable.
       b.variable = var; // Use same string allocated as variable in parameter.
-      b.value = cdr(car(frame_scanner));
+      b.value = binding_value(first_binding(curr_frame));
       return b;
     }
 
@@ -157,3 +168,8 @@ Element make_frame(const Element vars, const Element vals) {
 Element first_frame(const Element env) { return car(env); }
 
 Element enclosing_environment(const Element env) { return cdr(env); }
+
+Element first_binding(const Element frame) { return car(frame); }
+Element rest_bindings(const Element frame) { return cdr(frame); }
+Element binding_name(const Element binding) { return car(binding); }
+Element binding_value(const Element binding) { return cdr(binding); }

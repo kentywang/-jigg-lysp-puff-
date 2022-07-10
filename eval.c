@@ -51,8 +51,7 @@ Element eval_dispatch(const Element exp, const Element env) {
 
   } else if (special_form(IF, exp)) {
     release(2);  // let eval_if itself handle stack for tail call recursion.
-    Element result = eval_if(exp, env);
-    return result;
+    return eval_if(exp, env);
 
   } else if (special_form(LAMBDA, exp)) {
     Element result = make_procedure(exp, env);

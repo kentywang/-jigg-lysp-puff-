@@ -89,7 +89,6 @@ extern char *string_alloc(int);
 extern void save(Element);
 extern void release(int);
 extern void cleanup_element(Element);
-static void reset_deleted(void);
 
 /* data.c */
 extern Element make_cons(Element, Element);
