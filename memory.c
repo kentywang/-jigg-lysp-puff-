@@ -25,6 +25,7 @@ static Boolean already_deleted(void *);
 static void mark_to_keep(Pair *);
 static void add_to_deleted(void *);
 static void cleanup_pair(Pair *);
+static void reset_deleted(void);
 static void gc(void);
 
 // We'll use this to keep a running list of deleted addresses

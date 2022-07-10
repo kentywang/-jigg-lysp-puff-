@@ -138,7 +138,9 @@ done
 - Fix stack buildup in C by explicitly setting some static variables to store
   eval data. Currently, there's a cycle of calls of `eval_dispatch`, `apply`,
   `eval_sequence`, `eval_dispatch`, and `eval_if` when running
-  `count-to-a-million`.
+  `count-to-a-million`. I'll also need a virtual call stack, I believe.
+  My current implementation is TCO with respect to GCed values, but not the
+  rest of the C stack.
 
 Compiling:
 ```
