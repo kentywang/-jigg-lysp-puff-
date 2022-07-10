@@ -31,7 +31,7 @@ addresses on the virtual heap that aren't marked are then freed from
 memory in C.
 
 ### Overview of features
-- Quotations and proper parsing & printing
+#### Quotations and proper parsing & printing
 ```
 λ 》(list 'apple 2 3)
 (apple 2 3)
@@ -40,7 +40,7 @@ memory in C.
 λ 》    '(1   2 (a b   ''(x y))      3        4    )
 (1 2 (a b (quote (quote (x y)))) 3 4)
 ```
-- Definitions, lambda expressions and conditionals
+#### Definitions, lambda expressions and conditionals
 ```
 λ 》(define id (lambda (x) x))
 nil
@@ -66,7 +66,7 @@ a
             (cons start
                   (enum-interval (+ 1 start)
                                  end)))))
-                                 nil
+nil
                                  
 λ 》(enum-interval 1 8)
 (1 2 3 4 5 6 7 8)
@@ -81,18 +81,19 @@ a
      5)
 120
 ```
-- Tail-call optimization
+#### Tail-call optimization
 ```
-λ 》(define count-to-10k
+λ 》(define count-to-a-million
       (lambda (x) 
-        (if (= x 10000) 
+        (if (= x 999999) 
             'done 
-            (count-to-10k (+ x 1)))))
+            (count-to-a-million (+ x 1)))))
 nil
 
-λ 》(count-to-10k 1)
+λ 》(count-to-a-million 0)
 done
 ```
+#### Others
 - Garbage collection (mark-and-sweep)
 - Verbose option for tracing evaluation (WIP)
 
@@ -134,7 +135,10 @@ done
 - Improve time complexity of GC from O(n^4) to O(n).
 - Add more primitives and other usual language features.
 - Flesh out verbose mode.
-- Valgrind memcheck to verify that there are no memory leaks in C.
+- Fix stack buildup in C by explicitly setting some static variables to store
+  eval data. Currently, there's a cycle of calls of `eval_dispatch`, `apply`,
+  `eval_sequence`, `eval_dispatch`, and `eval_if` when running
+  `count-to-a-million`.
 
 Compiling:
 ```

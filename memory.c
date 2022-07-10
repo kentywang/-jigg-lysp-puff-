@@ -147,9 +147,8 @@ void add_to_deleted(void *ptr) {
 
   // Create first node if no nodes yet.
   if (!deleted) {
-    deleted = malloc(sizeof(AddressNode));
+    deleted = calloc(1, sizeof(AddressNode));
     deleted->value = ptr;
-    deleted->next = NULL;
   } else {
     AddressNode *prev;
 
@@ -160,9 +159,8 @@ void add_to_deleted(void *ptr) {
     }
 
     // Then add new address as new node
-    prev->next = malloc(sizeof(AddressNode));
+    prev->next = calloc(1, sizeof(AddressNode));
     prev->next->value = ptr;
-    prev->next->next = NULL;
   }
 }
 
