@@ -11,8 +11,8 @@ static Element first_binding(Element);
 static Element rest_bindings(Element);
 
 static Element the_empty_environment = {
-        .type = PAIR,
-        .data.pair_ptr = NULL
+  .type = PAIR,
+  .data.pair_ptr = NULL
 };
 
 Boolean is_empty_environment(const Element env) {
@@ -29,9 +29,9 @@ Element setup_environment(void) {
 }
 
 Binding find_binding(char *var, Element env) {
-  // This will be our signal to calling function indicating no binding
-  // found.
   Binding b = {
+    // This will be our signal to calling function indicating no binding
+    // found.
     .variable = NULL
   };
 
