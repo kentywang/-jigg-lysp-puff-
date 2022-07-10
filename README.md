@@ -30,6 +30,13 @@ as starting nodes to traverse and mark all its lineage as useful. The
 addresses on the virtual heap that aren't marked are then freed from
 memory in C.
 
+Tail-call optimization is handled by a while-loop implementation of
+the evaluation procedure, which I thought preferable over relying on
+the finicky nature of C compilers to tail-call optimize and also
+preferable over a lower-level modeling of the execution flow using
+registers and call stacks (Scheme--'s stack is only used for
+preserving intermediate values when GCing).
+
 ### Overview of features
 #### Quotations and proper parsing & printing
 ```
@@ -135,14 +142,6 @@ done
 - Improve time complexity of GC from O(n^4) to O(n).
 - Add more primitives and other usual language features.
 - Flesh out verbose mode.
-- Fix stack buildup in C by explicitly setting some static variables to store
-  eval data. Currently, there's a cycle of calls of `eval_dispatch`, `apply`,
-  `eval_sequence`, `eval_dispatch`, and `eval_if` when running
-  `count-to-a-million`. I'll also need a virtual call stack, I believe.
-  My current implementation is TCO with respect to GCed values, but not the
-  rest of the C stack. I could implement the solution either with a massive
-  eval_dispatch to trigger the C compiler to do TCO, or I could build it
-  using stacks, registers, and jump statements to chain instructions...
 
 Compiling:
 ```
