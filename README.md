@@ -75,8 +75,8 @@ a
                                  end)))))
 nil
                                  
-λ 》(enum-interval 1 8)
-(1 2 3 4 5 6 7 8)
+λ 》(enum-interval 1 10)
+(1 2 3 4 5 6 7 10)
 
 
 λ 》(((lambda (x) (x x))
@@ -85,8 +85,8 @@ nil
           (if (= 0 n)
               1
               (* n ((fact-gen fact-gen) (+ n -1)))))))
-     5)
-120
+     9)
+362880
 ```
 #### Tail-call optimization
 ```
