@@ -5,10 +5,7 @@
 
 static Element list_of_values(Element, Element);
 static Element make_procedure(Element, Element);
-static Element apply(Element, Pair *);
-static Element eval_sequence(Element, Element);
 static Element eval_definition(Element, Element);
-static Element eval_if(Element, Element);
 
 static Boolean self_evaluating(Element);
 static Boolean variable(Element);
@@ -28,7 +25,7 @@ static Element predicate(Element);
 static Element consequent(Element);
 static Element alternative(Element);
 
-Element eval_dispatch(const Element exp, const Element env) {
+Element eval_dispatch(const Element exp, Element env) {
   // These cases don't allocate memory, so GC won't get triggered here, so
   // we don't need to save pointers.
   if (self_evaluating(exp))
@@ -50,8 +47,14 @@ Element eval_dispatch(const Element exp, const Element env) {
     return result;
 
   } else if (special_form(IF, exp)) {
-    release(2);  // let eval_if itself handle stack for tail call recursion.
-    return eval_if(exp, env);
+    Element conditional = eval_dispatch(predicate(exp), env);
+    release(2);
+
+    return (
+      is_true(conditional) ?
+      eval_dispatch(consequent(exp), env) :
+      eval_dispatch(alternative(exp), env)
+    );
 
   } else if (special_form(LAMBDA, exp)) {
     Element result = make_procedure(exp, env);
@@ -59,13 +62,52 @@ Element eval_dispatch(const Element exp, const Element env) {
     return result;
 
   } else if (application(exp)) {
-    Element proc = eval_dispatch(operator(exp), env);
-    save(proc);
+    Element procedure = eval_dispatch(operator(exp), env);
+    save(procedure);
 
-    Pair *args = list_of_values(operands(exp), env).data.pair_ptr;
+    Pair *arguments = list_of_values(operands(exp), env).data.pair_ptr;
     release(3);
 
-    return apply(proc, args);
+    if (procedure.type == PRIMITIVE_PROCEDURE)
+      // TODO: Does this allow null args?
+      return (*procedure.data.func_ptr)(arguments);
+
+    if (procedure.type == COMPOUND_PROCEDURE) {
+      // Apply the function
+      Element params = procedure_parameters(procedure);
+      Element proc_env = procedure_environment(procedure);
+      Element proc_body = procedure_body(procedure);
+      save(procedure);
+
+      Element arg_bindings = make_frame(
+        params,
+        (Element){
+          .type = PAIR,
+          .data.pair_ptr = arguments
+        }
+      );
+
+      Element proc_env_with_args = make_cons(arg_bindings, proc_env);
+      release(1);
+
+      // Evaluate the sequence of expressions in the function
+      // Check if there's more expressions after the head.
+      while (cdr(proc_body).data.pair_ptr) {
+        save(proc_body);
+        save(proc_env_with_args);
+
+        eval_dispatch(car(proc_body), proc_env_with_args);
+        release(2);
+
+        proc_body = cdr(proc_body);
+      }
+
+      return eval_dispatch(car(proc_body), proc_env_with_args);
+    }
+
+    // Not a procedure. TODO: Print operator.
+    fprintf(stderr, "Not a procedure.\n");
+    exit(NOT_PROCEDURE);
   }
   // TODO: Add cond, and, or, let, assignment cases
   // Warning, we aren't release memory if these above cases aren't true.
@@ -91,69 +133,6 @@ Element list_of_values(const Element operands, const Element env) {
   release(1);
 
   return make_cons(first_value, rest);
-}
-
-Element apply(const Element procedure, Pair *arguments) {
-  if (procedure.type == PRIMITIVE_PROCEDURE)
-    // TODO: Does this allow null args?
-    return (*procedure.data.func_ptr)(arguments);
-
-  if (procedure.type == COMPOUND_PROCEDURE) {
-    Element params = procedure_parameters(procedure);
-    Element rest = procedure_environment(procedure);
-    Element proc_body = procedure_body(procedure);
-    save(procedure);
-
-    Element first_frame = make_frame(
-      params,
-      (Element){
-        .type = PAIR,
-        .data.pair_ptr = arguments
-      }
-    );
-
-    Element env = make_cons(first_frame, rest);
-    release(1);
-
-    return eval_sequence(proc_body, env);
-  }
-
-  // Not a procedure. TODO: Print operator.
-  fprintf(stderr, "Not a procedure.\n");
-  exit(NOT_PROCEDURE);
-  return procedure;
-}
-
-// The compiler may or may not perform C-level tail-call optimization,
-// But on the Lisp level we can at least reuse the current stack frame by
-// popping off the top in preparation for pushing a new frame.
-Element eval_sequence(const Element exps, const Element env) {
-  // Check if there's more expressions after the head.
-  if (cdr(exps).data.pair_ptr) {
-    save(exps);
-    save(env);
-
-    eval_dispatch(car(exps), env);
-    release(2);
-
-    return eval_sequence(cdr(exps), env);
-  }
-
-  return eval_dispatch(car(exps), env);
-}
-
-Element eval_if(const Element exp, const Element env) {
-  save(exp);
-  save(env);
-
-  Element conditional = eval_dispatch(predicate(exp), env);
-  release(2);
-
-  return (
-    is_true(conditional) ?
-    eval_dispatch(consequent(exp), env) :
-    eval_dispatch(alternative(exp), env)
-  );
 }
 
 // Modifies the environment to insert a new binding.

@@ -142,7 +142,7 @@ done
   My current implementation is TCO with respect to GCed values, but not the
   rest of the C stack. I could implement the solution either with a massive
   eval_dispatch to trigger the C compiler to do TCO, or I could build it
-  using stacks, registers, and jump statements to chain instructions.
+  using stacks, registers, and jump statements to chain instructions...
 
 Compiling:
 ```
