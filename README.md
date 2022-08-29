@@ -108,7 +108,7 @@ nil
 done
 ```
 #### Others
-- Garbage collection (mark-and-sweep)
+- Cleanroom garbage collection implementation (mark-and-sweep)
 - Verbose option for tracing evaluation (WIP)
 
 ### Lessons learned
@@ -146,7 +146,7 @@ done
   around 3 weeks learning is terrifying.
 
 ### Todos
-- Improve time complexity of GC from O(n^4) to O(n).
+- Improve time complexity of GC from O(n^4) to O(n) using hash tables.
 - Add more primitives and other usual language features.
 - Flesh out verbose mode.
 
