@@ -88,6 +88,13 @@ nil
      9)
 362880
 ```
+#### Closures
+```
+λ 》(define x (lambda () k))
+    (define k 5)
+    (x)
+5
+```
 #### Tail-call optimization
 ```
 λ 》(define count-to-a-million
