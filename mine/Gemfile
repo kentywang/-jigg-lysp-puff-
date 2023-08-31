@@ -7,4 +7,4 @@ git_source(:github) {|repo_name| "https://github.com/kentywang/scheme--" }
 
 # gem "rails"
 
-gem "webrick", "~> 1.4.2"
+gem "webrick", "~> 1.6.1"
