@@ -7,7 +7,7 @@ git_source(:github) {|repo_name| "https://github.com/kentywang/scheme--" }
 
 # gem "rails"
 
-gem "puma", "~> 4.3"
+gem "puma", "~> 5.6"
 
 gem "sinatra", "~> 2.0"
 
