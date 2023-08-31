@@ -1,10 +1,14 @@
 # frozen_string_literal: true
 
 source "https://rubygems.org"
-ruby "3.1.4"
+ruby "3.1.3"
 
 git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
 
 # gem "rails"
 
-gem "webrick", "~> 1.4.2"
+gem "puma", "~> 4.3"
+
+gem "sinatra", "~> 2.0"
+
+gem "cowsay", "~> 0.3.0"
