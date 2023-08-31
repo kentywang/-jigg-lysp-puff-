@@ -150,7 +150,7 @@ done
 - Add more primitives and other usual language features.
 - Flesh out verbose mode.
 
-Compiling:
+### Compiling:
 ```
 clang data.c memory.c env.c eval.c main.c primitive.c print.c read.c
 ```
@@ -158,3 +158,7 @@ Running:
 ```
 ./a.out
 ```
+
+### Acknowledgements
+Appreciate Mame's [xterm-pty](https://github.com/mame/xterm-pty/) for introducing a
+simple way of getting this C program running on the browser using Emscripten and xtermjs.

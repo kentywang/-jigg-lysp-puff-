@@ -1,0 +1,71 @@
+<html>
+<head>
+  <title>SCHEME-- online terminal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@4.17.0/css/xterm.css">
+</head>
+<body>
+<h1>Scheme-- online terminal (alpha)</h1>
+<div id="terminal"></div>
+<div>
+  Suggested expressions to try:
+  <ul>
+    <li>Make a list with numbers and symbols
+      <p>(list 'apple 2 3)</p>
+    </li>
+
+    <li>Make and call a lambda expression
+      <ol>
+        <li>(define id (lambda (x) x))</li>
+        <li>(id 123)</li>
+        <li>(id id)</li>
+      </ol>
+      <br/>
+    </li>
+
+    <li>Make and call a recursive function
+      <ol>
+        <li>
+          (define enum-interval (lambda (start end) (if (= start end) (list start) (cons start (enum-interval (+ 1 start) end)))))
+        </li>
+        <li>
+          (enum-interval 1 8)
+        </li>
+      </ol>
+      <br/>
+    </li>
+
+    <li>
+      Factorial of 5, lambda calculus style (i.e. without named function definitions)
+      <p>(((lambda (x) (x x)) (lambda (fact-gen) (lambda (n) (if (= 0 n) 1 (* n ((fact-gen fact-gen) (+ n -1))))))) 5)</p>
+    </li>
+
+    <li>
+      Show that it's tail-call optimized (i.e. properly-written recursion won't overflow the stack)
+      <ol>
+        <li>(define count-to-a-million (lambda (x) (if (= x 999999) 'done (count-to-a-million (+ x 1)))))</li>
+        <li>(count-to-a-million 0)
+      </li>
+      </ol>
+      </li>
+    </li>
+
+  </ul>
+  <div>
+
+  </div>
+</div>
+<a href="https://github.com/kentywang/scheme--">GitHub link</a>
+<script src="https://cdn.jsdelivr.net/npm/xterm@4.17.0/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-pty@0.9.4/index.js"></script>
+<script>
+  const xterm = new Terminal();
+  xterm.open(document.getElementById("terminal"));
+
+  const { master, slave } = openpty();
+  xterm.loadAddon(master);
+
+  const worker = new Worker("./example.worker.js");
+  new TtyServer(slave).start(worker);
+</script>
+</body>
+</html>

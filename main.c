@@ -30,7 +30,7 @@ void read_eval_print_loop(void) {
 
   do {
     // Read
-    printf("λ 》");
+    printf(">>>");
     read_input(&exp);
 
     // Eval
