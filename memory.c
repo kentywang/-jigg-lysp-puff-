@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include "lisp.h"
 
-#define HEAP_LIMIT 150  // Currently, clean env takes up around 18 addresses.
-#define STACK_LIMIT 100
+#define HEAP_LIMIT 1500  // Currently, a clean env takes up around 18 addresses.
+#define STACK_LIMIT 1000
 
 // Array of pair addresses (not array of pairs)
 static Pair *heap1[HEAP_LIMIT];
