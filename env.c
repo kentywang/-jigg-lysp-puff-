@@ -72,7 +72,10 @@ Element lookup_variable_value(char *var, Element env) {
     return b.value;
 
   fprintf(stderr, "Unbound variable: %s\n", var);
-  exit(UNBOUND_VARIABLE);
+
+  // TODO: we shouldn't really return NIL, we should just exit. But to keep the REPL going, we'll try and avoid exiting, so we need to return some value.
+  return NIL;
+  //exit(UNBOUND_VARIABLE);
 }
 
 /*

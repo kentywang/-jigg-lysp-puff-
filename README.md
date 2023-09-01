@@ -158,6 +158,10 @@ Running:
 ```
 ./a.out
 ```
+For compiling to JS and Wasm for browser use, I use
+```sh
+emcc data.c memory.c env.c eval.c main.c primitive.c print.c read.c -o example-core.js -sNO_EXIT_RUNTIME=1 -sFORCE_FILESYSTEM=1
+```
 
 ### Acknowledgements
 Appreciate Mame's [xterm-pty](https://github.com/mame/xterm-pty/) for introducing a

@@ -107,7 +107,10 @@ Element eval_dispatch(Element exp, Element env) {
 
       // Not a procedure. TODO: Print operator.
       fprintf(stderr, "Not a procedure.\n");
-      exit(NOT_PROCEDURE);
+
+      // TODO: we shouldn't really return NIL, we should just exit. But to keep the REPL going, we'll try and avoid exiting, so we need to return some value.
+      return NIL;
+      //exit(NOT_PROCEDURE);
     }
     // TODO: Add cond, and, or, let, assignment cases
     // Warning, we aren't release memory if these above cases aren't true.
