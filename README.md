@@ -6,7 +6,7 @@ _|_|      _|        _|    _|  _|_|_|_|  _|    _|    _|  _|_|_|_|  _|_| |_|_|
     _|_|  _|        _|    _|  _|        _|    _|    _|  _|                    
 _|_|_|      _|_|_|  _|    _|    _|_|_|  _|    _|    _|    _|_|_|              
 ```
-A Scheme interpreter developed from scratch. Scheme-- runs as a 
+A Scheme interpreter developed from scratch in C. Scheme-- runs as a 
 read-evaluate-print loop. It maintains a virtual stack and a virtual 
 heap that store addresses to Lisp pairs.
 
