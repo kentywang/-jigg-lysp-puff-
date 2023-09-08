@@ -1,11 +1,5 @@
+# SCHEME--
 
-```                                                   
-                    _|                                                        
-  _|_|_|    _|_|_|  _|_|_|      _|_|    _|_|_|  _|_|      _|_|                
-_|_|      _|        _|    _|  _|_|_|_|  _|    _|    _|  _|_|_|_|  _|_| |_|_|
-    _|_|  _|        _|    _|  _|        _|    _|    _|  _|                    
-_|_|_|      _|_|_|  _|    _|    _|_|_|  _|    _|    _|    _|_|_|              
-```
 A Scheme interpreter developed from scratch in C. Scheme-- runs as a 
 read-evaluate-print loop. It maintains a virtual stack and a virtual 
 heap that store addresses to Lisp pairs.
@@ -150,17 +144,24 @@ done
 - Add more primitives and other usual language features.
 - Flesh out verbose mode.
 
-### Compiling:
-```
+### Running it in a terminal
+I compile it with
+```sh
 clang data.c memory.c env.c eval.c main.c primitive.c print.c read.c
 ```
-Running:
-```
+and then run it via
+```sh
 ./a.out
 ```
+
+### Running it on a browser
 For compiling to JS and Wasm for browser use, I use
 ```sh
 emcc data.c memory.c env.c eval.c main.c primitive.c print.c read.c -o example-core.js -sNO_EXIT_RUNTIME=1 -sFORCE_FILESYSTEM=1
+```
+and serve it on localhost:8080 via
+```sh
+ruby server.rb
 ```
 
 ### Acknowledgements
