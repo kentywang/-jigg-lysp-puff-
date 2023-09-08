@@ -28,9 +28,17 @@ void read_eval_print_loop(void) {
   Element env = setup_environment();
   save(env);  // keep the global env from being GCed
 
-  do {
+  printf("                    _|                                                      \n");
+  printf("  _|_|_|    _|_|_|  _|_|_|      _|_|    _|_|_|  _|_|      _|_|              \n");
+  printf("_|_|      _|        _|    _|  _|_|_|_|  _|    _|    _|  _|_|_|_|  _|_| |_|_|\n");
+  printf("    _|_|  _|        _|    _|  _|        _|    _|    _|  _|                  \n");
+  printf("_|_|_|      _|_|_|  _|    _|    _|_|_|  _|    _|    _|    _|_|_|            \n");
+  printf("\n");
+
+  while (printf(">>> ")) {
+    fflush(stdout); // Flush the output buffer
+
     // Read
-    printf(">>> ");
     read_input(&exp);
 
     // Eval
@@ -39,5 +47,5 @@ void read_eval_print_loop(void) {
     // Print
     print_element(val);
 
-  } while (TRUE); // Loop
+  } // Loop
 }
